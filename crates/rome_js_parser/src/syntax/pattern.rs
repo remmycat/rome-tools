@@ -24,19 +24,25 @@ pub(crate) trait ParseWithDefaultPattern {
     fn parse_pattern_with_optional_default(&self, p: &mut Parser) -> ParsedSyntax {
         let pattern = self.parse_pattern(p);
 
-        if p.at(T![=]) {
-            let with_default = pattern.precede_or_add_diagnostic(p, Self::expected_pattern_error);
-            p.bump_any(); // eat the = token
+        pattern.map(|pattern| {
+            // Only parse out the `=` if a pattern was present to avoid eating any trailing which marks the end of the assignment
 
-            // test pattern_with_default_in_keyword
-            // for ([a = "a" in {}] in []) {}
-            parse_assignment_expression_or_higher(p, ExpressionContext::default())
-                .or_add_diagnostic(p, js_parse_error::expected_expression_assignment);
+            // test_err js_invalid_assignment
+            // ([=[(p[=[(p%]>([=[(p[=[(
+            if p.at(T![=]) {
+                let with_default = pattern.precede(p);
+                p.bump(T![=]);
 
-            Present(with_default.complete(p, Self::pattern_with_default_kind()))
-        } else {
-            pattern
-        }
+                // test pattern_with_default_in_keyword
+                // for ([a = "a" in {}] in []) {}
+                parse_assignment_expression_or_higher(p, ExpressionContext::default())
+                    .or_add_diagnostic(p, js_parse_error::expected_expression_assignment);
+
+                with_default.complete(p, Self::pattern_with_default_kind())
+            } else {
+                pattern
+            }
+        })
     }
 }
 
@@ -166,7 +172,7 @@ pub(crate) trait ParseObjectPattern {
             }
             let recovery_set = ParseRecovery::new(
                 Self::unknown_pattern_kind(),
-                token_set!(EOF, T![,], T!['}'], T![...], T![;], T![')']),
+                token_set!(EOF, T![,], T!['}'], T![...], T![;], T![')'], T![=]),
             )
             .enable_recovery_on_line_break();
 
