@@ -247,46 +247,52 @@ pub fn concat_elements<I>(elements: I) -> FormatElement
 where
     I: IntoIterator<Item = FormatElement>,
 {
-    let mut elements = elements.into_iter();
+    let mut elements = elements.into_iter().filter(|e| !e.is_empty());
+    let (_, upper_bound) = elements.size_hint();
 
-    let (lower_bound, upper_bound) = elements.size_hint();
-    let size_hint = upper_bound.unwrap_or(lower_bound);
+    let first = match elements.next() {
+        Some(element) => element,
+        None => return empty_element(),
+    };
+
+    let second = match elements.next() {
+        Some(element) => element,
+        // Don't create a vec for single item lists
+        None => return first,
+    };
+
+    // The lower bound after here must be 2, because two elements have been retrieved above.
+    let size_hint = upper_bound.unwrap_or(2);
 
     // If the first non empty element is a vec, use it,
     // otherwise create a new one with the current element
-    let mut concatenated = loop {
-        match elements.next() {
-            Some(FormatElement::Empty) => continue,
-            Some(FormatElement::List(list)) => {
-                let mut v = list.content;
-                v.reserve(size_hint);
-                break v;
-            }
-            Some(element) => {
-                let mut v = Vec::with_capacity(size_hint);
-                v.push(element);
-                break v;
-            }
-            None => return empty_element(),
+    let mut concatenated = match first {
+        FormatElement::List(list) => {
+            let mut v = list.content;
+            v.reserve(size_hint - 1);
+            v
         }
+        element => {
+            let mut v = Vec::with_capacity(size_hint);
+            v.push(element);
+            v
+        }
+    };
+
+    match second {
+        FormatElement::List(list) => concatenated.extend(list.content),
+        element => concatenated.push(element),
     };
 
     // continue to the rest of the list
     for element in elements {
         match element {
             FormatElement::List(list) => concatenated.extend(list.content),
-            FormatElement::Empty => {}
             element => concatenated.push(element),
         }
     }
 
-    if concatenated.is_empty() {
-        empty_element()
-    } else if concatenated.len() == 1 {
-        concatenated.pop().unwrap()
-    } else {
-        FormatElement::from(List::new(concatenated))
-    }
+    FormatElement::from(List::new(concatenated))
 }
 
 /// Concatenates a list of [FormatElement]s with spaces and line breaks to fit
