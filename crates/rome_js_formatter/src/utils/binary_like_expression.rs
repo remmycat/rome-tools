@@ -210,23 +210,16 @@ fn format_with_or_without_parenthesis(
     };
 
     let result = if operation_is_higher {
-        let formatted = if node.contains_comments() {
-            let (leading, content, trailing) = formatted_node.split_trivia();
-            format_elements![
-                leading,
-                group_elements(format_elements![
-                    token("("),
-                    soft_block_indent(format_elements![content, trailing]),
-                    token(")")
-                ])
-            ]
-        } else {
+        let (leading, content, trailing) = formatted_node.split_trivia();
+        let formatted = format_elements![
+            leading,
             group_elements(format_elements![
                 token("("),
-                soft_block_indent(formatted_node),
-                token(")"),
+                soft_block_indent(format_elements![content, trailing]),
+                token(")")
             ])
-        };
+        ];
+
         (formatted, true)
     } else {
         (formatted_node, false)
