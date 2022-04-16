@@ -1128,8 +1128,7 @@ pub enum Token {
         // The position of the dynamic token in the unformatted source code
         source_position: TextSize,
     },
-    /// A token for a text that is taken as is from the source code (input text and formatted representation are identical).
-    /// Implementing by taking a slice from a `SyntaxToken` to avoid allocating a new string.
+    // A token that is taken 1:1 from the source code
     SyntaxTokenSlice {
         /// The start position of the token in the unformatted source code
         source_position: TextSize,
