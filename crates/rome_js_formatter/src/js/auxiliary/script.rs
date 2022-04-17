@@ -19,7 +19,7 @@ impl ToFormatElement for JsScript {
         Ok(format_elements![
             format_interpreter(interpreter_token, formatter)?,
             directives.format(formatter)?,
-            formatter.format_list(statements),
+            formatter.format_list(&statements),
             eof_token.format(formatter)?,
             hard_line_break()
         ])

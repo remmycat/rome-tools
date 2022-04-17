@@ -304,7 +304,7 @@ pub fn generate_formatter() {
 
                 impl ToFormatElement for #id {
                     fn to_format_element(&self, formatter: &Formatter) -> FormatResult<FormatElement> {
-                        Ok(formatter.format_list(self.clone()))
+                        Ok(formatter.format_list(self))
                     }
                 }
             },

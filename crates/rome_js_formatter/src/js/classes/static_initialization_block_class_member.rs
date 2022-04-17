@@ -19,7 +19,7 @@ impl ToFormatElement for JsStaticInitializationBlockClassMember {
         let static_token = static_token.format(formatter)?;
         let separated = formatter.format_delimited_block_indent(
             &l_curly_token?,
-            formatter.format_list(statements),
+            formatter.format_list(&statements),
             &r_curly_token?,
         )?;
         Ok(format_elements![static_token, space_token(), separated])
