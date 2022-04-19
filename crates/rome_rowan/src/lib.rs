@@ -37,8 +37,8 @@ pub use crate::{
     green::RawSyntaxKind,
     syntax::{
         Language, SyntaxElement, SyntaxElementChildren, SyntaxKind, SyntaxList, SyntaxNode,
-        SyntaxNodeChildren, SyntaxToken, SyntaxTriviaPiece, SyntaxTriviaPieceComments, TriviaPiece,
-        TriviaPieceKind,
+        SyntaxNodeChildren, SyntaxSlots, SyntaxToken, SyntaxTriviaPiece, SyntaxTriviaPieceComments,
+        TriviaPiece, TriviaPieceKind,
     },
     syntax_factory::*,
     syntax_node_text::SyntaxNodeText,

@@ -9,6 +9,7 @@ use crate::{
 
 use rome_js_syntax::JsCaseClause;
 use rome_js_syntax::JsCaseClauseFields;
+use rome_rowan::AstNodeList;
 
 impl ToFormatElement for JsCaseClause {
     fn to_format_element(&self, formatter: &Formatter) -> FormatResult<FormatElement> {
@@ -22,9 +23,10 @@ impl ToFormatElement for JsCaseClause {
         let case_word = case_token.format(formatter)?;
         let colon = colon_token.format(formatter)?;
         let test = test.format(formatter)?;
-        let cons = formatter.format_list(consequent);
 
-        let cons = if cons.is_empty() {
+        let cons = formatter.format_list(&consequent);
+
+        let cons = if consequent.is_empty() {
             // Skip inserting an indent block is the consequent is empty to print
             // the trailing comments for the case clause inline if there is no
             // block to push them into

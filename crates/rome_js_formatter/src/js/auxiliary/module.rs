@@ -18,7 +18,7 @@ impl ToFormatElement for JsModule {
         Ok(format_elements![
             format_interpreter(interpreter_token, formatter)?,
             directives.format(formatter)?,
-            formatter.format_list(items),
+            formatter.format_list(&items),
             eof_token.format(formatter)?,
             hard_line_break()
         ])

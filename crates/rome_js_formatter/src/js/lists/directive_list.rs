@@ -9,7 +9,7 @@ impl ToFormatElement for JsDirectiveList {
     fn to_format_element(&self, formatter: &Formatter) -> FormatResult<FormatElement> {
         if !self.is_empty() {
             Ok(format_elements![
-                formatter.format_list(self.clone()),
+                formatter.format_list(self),
                 hard_line_break()
             ])
         } else {

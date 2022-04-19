@@ -313,7 +313,7 @@ impl Formatter {
     /// If the formatter fails to format an element, said element gets printed verbatim.
     pub fn format_list<List, Node: AstNode<JsLanguage> + ToFormatElement>(
         &self,
-        list: List,
+        list: &List,
     ) -> FormatElement
     where
         List: AstNodeList<JsLanguage, Node>,

@@ -18,7 +18,7 @@ impl ToFormatElement for JsBlockStatement {
             r_curly_token,
         } = self.as_fields();
 
-        let stmts = formatter.format_list(statements);
+        let stmts = formatter.format_list(&statements);
 
         if is_non_collapsable_empty_block(self) {
             Ok(format_elements![

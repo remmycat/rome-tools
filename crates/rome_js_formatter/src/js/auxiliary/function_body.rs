@@ -19,7 +19,7 @@ impl ToFormatElement for JsFunctionBody {
             &l_curly_token?,
             format_elements![
                 directives.format(formatter)?,
-                formatter.format_list(statements),
+                formatter.format_list(&statements),
             ],
             &r_curly_token?,
         )

@@ -18,7 +18,7 @@ impl ToFormatElement for JsDefaultClause {
 
         let default = default_token.format(formatter)?;
         let colon = colon_token.format(formatter)?;
-        let statements = formatter.format_list(consequent);
+        let statements = formatter.format_list(&consequent);
 
         Ok(format_elements![
             default,
