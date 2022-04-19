@@ -1,4 +1,5 @@
 use crate::{write, Arguments, FormatElement, FormatOptions, Result};
+use std::ops::{Deref, DerefMut};
 
 pub trait Buffer {
     fn write_element(&mut self, element: FormatElement) -> Result<()>;
@@ -45,8 +46,31 @@ impl VecBuffer {
         }
     }
 
+    /// Writes the elements from this buffer into the passed buffer
+    pub fn write_into(&mut self, buffer: &mut dyn Buffer) -> crate::Result<()> {
+        for element in self.drain(..) {
+            buffer.write_element(element)?;
+        }
+
+        Ok(())
+    }
+
     pub fn into_vec(self) -> Vec<FormatElement> {
         self.elements
+    }
+}
+
+impl Deref for VecBuffer {
+    type Target = Vec<FormatElement>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.elements
+    }
+}
+
+impl DerefMut for VecBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.elements
     }
 }
 

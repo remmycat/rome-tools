@@ -1,10 +1,6 @@
-use crate::arguments::Argument;
 use crate::format_element::Token;
-use crate::{Arguments, Buffer, Format, Formatter, Sequence};
-use rome_rowan::{
-    AstNode, AstNodeList, AstNodeListIterator, AstSeparatedList, AstSeparatedListNodesIterator,
-    Language, SyntaxElement, SyntaxList, SyntaxSlots, SyntaxToken,
-};
+use crate::{normalize_newlines, write, Format, Formatter, LINE_TERMINATORS};
+use rome_rowan::{Language, SyntaxToken, SyntaxTriviaPieceComments};
 
 trait FormatNode<L: Language>: Format {
     fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
@@ -16,54 +12,54 @@ trait FormatNode<L: Language>: Format {
 
 impl<L: Language> Format for SyntaxToken<L> {
     fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
-        // print leading trivia
-        // TODO use macro
-        let token = Token::from(self);
-        let token_arg = Argument::new(&token);
-        let args = [token_arg];
-
-        formatter.write_fmt(&Arguments::new(&args))
+        write!(formatter, Token::from(self))
     }
 }
 
-// impl<L: Language> Sequence for SyntaxList<L> {
-//     type Item = SyntaxElement<L>;
-//     type Iter = SyntaxSlots<L>;
-//
-//     fn iter(&self) -> Self::Iter {
-//         SyntaxList::iter(self)
-//     }
-// }
-//
-// impl<T> Sequence for T
-// where
-//     T: AstNodeList,
-// {
-//     type Item = T::Node;
-//     type Iter = AstNodeListIterator<T::Language, T::Node>;
-//
-//     fn iter(&self) -> Self::Iter {
-//         AstNodeList::iter(self)
-//     }
-// }
+impl<L: Language> Format for SyntaxTriviaPieceComments<L> {
+    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+        let range = self.text_range();
+        let token = Token::from_syntax_token_cow_slice(
+            normalize_newlines(self.text().trim(), LINE_TERMINATORS),
+            &self.as_piece().token(),
+            range.start(),
+        );
 
-// impl<L: Language, N: AstNode<L>, T: AstSeparatedList<L, N>> Sequence for T {
-//     type Item = N;
-//     type Iter = AstSeparatedListNodesIterator<L, N>;
-//
-//     fn iter(&self) -> Self::Iter {
-//         AstSeparatedList::iter(self)
-//     }
-// }
+        write!(formatter, token)
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        block_indent, format_args, format_with, group, space_token, token, write, Format,
-        FormatElement, Formatter,
+        block_indent, format, format_args, format_with, group, hard_line_break, space_token, token,
+        write, Buffer, Format, FormatElement, Formatter, VecBuffer,
     };
-    use rome_js_syntax::{JsIfStatement, JsIfStatementFields};
+    use rome_js_syntax::{JsBlockStatement, JsIfStatement, JsIfStatementFields};
     use rome_rowan::{SyntaxResult, SyntaxToken};
+
+    impl Format for JsBlockStatement {
+        fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+            let mut buf = VecBuffer::new(*formatter.options());
+
+            // TODO use join_elements_with which handles the spacing
+            let list = formatter.join_with(&hard_line_break());
+
+            for statement in self.statements() {
+                match write!(buf, statement) {
+                    Ok(_) => {
+                        buf.write_into(formatter)?;
+                    }
+                    Err(_) => {
+                        buf.clear();
+                        // Format unknown
+                    }
+                }
+            }
+
+            Ok(())
+        }
+    }
 
     impl Format for JsIfStatement {
         fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {

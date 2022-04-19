@@ -4,6 +4,7 @@ use rome_rowan::{
     Language, SyntaxToken, SyntaxTokenText, SyntaxTriviaPieceComments, TextLen, TextRange, TextSize,
 };
 use std::borrow::Cow;
+use std::cell::Cell;
 use std::fmt;
 use std::fmt::Debug;
 use std::ops::Deref;
@@ -517,64 +518,106 @@ impl Buffer for TriviaAdapter<'_, '_> {
     }
 }
 
-pub struct Join<'items, 'with, F, I>
+pub struct Join<'with, F, I>
 where
-    F: Format + 'items,
-    I: IntoIterator<Item = &'items F>,
+    F: Format,
+    I: Iterator<Item = F>,
 {
-    items: &'items I,
+    items: Cell<Option<I>>,
     with: Option<&'with dyn Format>,
 }
 
-pub fn join<'items, F, I>(items: &'items I) -> Join<'items, '_, F, I>
+pub fn join<F, I>(items: I) -> Join<'static, F, I::IntoIter>
 where
     F: Format,
-    I: IntoIterator<Item = &'items F>,
-{
-    Join { items, with: None }
-}
-
-pub fn join_with<'i, 'w, F, I>(items: &'i I, with: &'w dyn Format) -> Join<'i, 'w, F, I>
-where
-    F: Format,
-    I: IntoIterator<Item = &'i F>,
+    I: IntoIterator<Item = F>,
 {
     Join {
-        items,
+        items: Cell::new(Some(items.into_iter())),
+        with: None,
+    }
+}
+
+pub fn join_with<'w, F, I>(items: I, with: &'w dyn Format) -> Join<'w, F, I::IntoIter>
+where
+    F: Format,
+    I: IntoIterator<Item = F>,
+{
+    Join {
+        items: Cell::new(Some(items.into_iter())),
         with: Some(with),
     }
 }
 
-// impl<'items, F, I> Format for Join<'items, '_, F, I>
-// where
-//     F: Format,
-//     I: IntoIterator<Item = &'items F>,
-// {
-//     fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
-//         if let Some(with) = self.with {
-//             formatter
-//                 .join_with(with)
-//                 .entries(self.items.into_iter())
-//                 .finish()
-//         } else {
-//             formatter.join().entries(self.items.into_iter()).finish()
-//         }
-//     }
-// }
-
-/// Sequence that can be iterated over. Differs from [IntoIterator] that it doesn't consume
-/// self.
-pub trait Sequence {
-    type Item;
-    type Iter: Iterator<Item = Self::Item>;
-    fn iter(&self) -> Self::Iter;
+impl<F, I> Format for Join<'_, F, I>
+where
+    F: Format,
+    I: Iterator<Item = F> + Clone,
+{
+    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+        if let Some(items) = self.items.take() {
+            if let Some(with) = self.with {
+                formatter
+                    .join_with(with)
+                    .entries(items.into_iter())
+                    .finish()
+            } else {
+                formatter.join().entries(items.into_iter()).finish()
+            }
+        } else {
+            panic!("Iterator has already been consumed");
+        }
+    }
 }
 
-impl<'a, T> Sequence for &'a [T] {
-    type Item = &'a T;
-    type Iter = std::slice::Iter<'a, T>;
+pub struct Fill<'with, F, I>
+where
+    F: Format,
+    I: Iterator<Item = F>,
+{
+    items: Cell<Option<I>>,
+    with: Option<&'with dyn Format>,
+}
 
-    fn iter(&self) -> Self::Iter {
-        self.into_iter()
+pub fn fill<F, I>(items: I) -> Fill<'static, F, I::IntoIter>
+where
+    F: Format,
+    I: IntoIterator<Item = F>,
+{
+    Fill {
+        items: Cell::new(Some(items.into_iter())),
+        with: None,
+    }
+}
+
+pub fn fill_with<'w, F, I>(items: I, with: &'w dyn Format) -> Fill<'w, F, I::IntoIter>
+where
+    F: Format,
+    I: IntoIterator<Item = F>,
+{
+    Fill {
+        items: Cell::new(Some(items.into_iter())),
+        with: Some(with),
+    }
+}
+
+impl<F, I> Format for Fill<'_, F, I>
+where
+    F: Format,
+    I: Iterator<Item = F> + Clone,
+{
+    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+        if let Some(items) = self.items.take() {
+            if let Some(with) = self.with {
+                formatter
+                    .fill_with(with)
+                    .entries(items.into_iter())
+                    .finish()
+            } else {
+                formatter.fill().entries(items.into_iter()).finish()
+            }
+        } else {
+            panic!("Iterator has already been consumed");
+        }
     }
 }
