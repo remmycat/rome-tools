@@ -1,6 +1,7 @@
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
+use rome_formatter::format_elements;
 
-use crate::{format_elements, FormatElement, FormatResult, Formatter, ToFormatElement};
+use crate::{FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsComputedMemberExpression;
 use rome_js_syntax::JsComputedMemberExpressionFields;

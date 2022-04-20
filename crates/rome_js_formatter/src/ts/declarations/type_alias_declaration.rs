@@ -1,9 +1,9 @@
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
 use crate::utils::format_with_semicolon;
 use crate::{
-    format_elements, hard_group_elements, space_token, FormatElement, FormatResult, Formatter,
-    ToFormatElement,
+    hard_group_elements, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::{TsTypeAliasDeclaration, TsTypeAliasDeclarationFields};
 
 impl ToFormatElement for TsTypeAliasDeclaration {

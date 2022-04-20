@@ -1,8 +1,8 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
 use crate::{
-    format_elements, hard_group_elements, space_token, FormatElement, FormatResult, Formatter,
-    ToFormatElement,
+    hard_group_elements, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
 
 use rome_js_syntax::JsInitializerClause;

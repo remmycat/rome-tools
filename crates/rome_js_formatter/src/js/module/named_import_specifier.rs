@@ -1,8 +1,8 @@
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
+use rome_formatter::format_elements;
 
 use crate::{
-    format_elements, soft_line_break_or_space, space_token, FormatElement, FormatResult, Formatter,
-    ToFormatElement,
+    soft_line_break_or_space, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
 
 use rome_js_syntax::JsNamedImportSpecifier;

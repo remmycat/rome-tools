@@ -1,4 +1,5 @@
-use crate::{write, Arguments, FormatElement, FormatOptions, Result};
+use super::{write, Arguments, FormatElement, Result};
+use crate::FormatOptions;
 use std::ops::{Deref, DerefMut};
 
 pub trait Buffer {
@@ -47,7 +48,7 @@ impl VecBuffer {
     }
 
     /// Writes the elements from this buffer into the passed buffer
-    pub fn write_into(&mut self, buffer: &mut dyn Buffer) -> crate::Result<()> {
+    pub fn write_into(&mut self, buffer: &mut dyn Buffer) -> super::Result<()> {
         for element in self.drain(..) {
             buffer.write_element(element)?;
         }

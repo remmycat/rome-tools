@@ -1,4 +1,4 @@
-use crate::{Buffer, Format, Formatter};
+use super::{Buffer, Format, Formatter};
 
 // Ideally, a extern "C" { type Opaque } but the opaque features isn't stabilized.
 // Use an empty enum as an opaque type instead.
@@ -13,14 +13,14 @@ pub struct Argument<'fmt> {
     /// The value to format.
     value: &'fmt Opaque,
     /// The function pointer to `value`'s `Format::format` method
-    formatter: fn(&'fmt Opaque, &mut Formatter<'_>) -> crate::Result<()>,
+    formatter: fn(&'fmt Opaque, &mut Formatter<'_>) -> super::Result<()>,
 }
 
 impl<'fmt> Argument<'fmt> {
     #[doc(hidden)]
     #[inline]
     pub fn new<F: Format>(value: &'fmt F) -> Self {
-        let formatter: fn(&F, &mut Formatter<'_>) -> crate::Result<()> = F::format;
+        let formatter: fn(&F, &mut Formatter<'_>) -> super::Result<()> = F::format;
 
         unsafe {
             Self {
@@ -36,7 +36,7 @@ impl<'fmt> Argument<'fmt> {
     }
 
     /// Formats the value stored by this argument using the given formatter.
-    pub(crate) fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+    pub(crate) fn format(&self, formatter: &mut Formatter) -> super::Result<()> {
         (self.formatter)(self.value, formatter)
     }
 }
@@ -59,15 +59,15 @@ impl<'fmt> Arguments<'fmt> {
 }
 
 impl Format for Arguments<'_> {
-    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut Formatter) -> super::Result<()> {
         formatter.write_fmt(self)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{format, format_args, group, space_token, token};
-    use crate::{FormatElement, FormatOptions, Token};
+    use crate::v2::{group, space_token, token, FormatElement, Token};
+    use crate::{format, format_args, FormatOptions};
 
     #[test]
     fn test_nesting() {

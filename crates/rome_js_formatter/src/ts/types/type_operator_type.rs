@@ -1,7 +1,6 @@
 use crate::formatter_traits::FormatTokenAndNode;
-use crate::{
-    format_elements, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{space_token, FormatElement, FormatResult, Formatter, ToFormatElement};
+use rome_formatter::format_elements;
 use rome_js_syntax::TsTypeOperatorType;
 
 impl ToFormatElement for TsTypeOperatorType {

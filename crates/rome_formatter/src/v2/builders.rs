@@ -1,4 +1,4 @@
-use crate::{Buffer, Format, FormatElement, Formatter};
+use super::{Buffer, Format, FormatElement, Formatter};
 
 pub struct FillBuilder<'a, 'with, 'buf> {
     inner: JoinBuilder<'a, 'with, 'buf>,
@@ -51,7 +51,7 @@ impl<'a, 'with, 'buf> FillBuilder<'a, 'with, 'buf> {
         self
     }
 
-    pub fn finish(&mut self) -> crate::Result<()> {
+    pub fn finish(&mut self) -> super::Result<()> {
         self.inner
             .result
             .and_then(|_| self.inner.fmt.write_element(FormatElement::FillEnd))
@@ -59,7 +59,7 @@ impl<'a, 'with, 'buf> FillBuilder<'a, 'with, 'buf> {
 }
 
 pub struct JoinBuilder<'fmt, 'joiner, 'buf> {
-    result: crate::Result<()>,
+    result: super::Result<()>,
     fmt: &'fmt mut Formatter<'buf>,
     with: Option<&'joiner dyn Format>,
     has_elements: bool,
@@ -113,7 +113,7 @@ impl<'fmt, 'joiner, 'buf> JoinBuilder<'fmt, 'joiner, 'buf> {
         self
     }
 
-    pub fn finish(&mut self) -> crate::Result<()> {
+    pub fn finish(&mut self) -> super::Result<()> {
         self.result
     }
 }

@@ -10,17 +10,17 @@ mod buffer;
 mod builders;
 mod format_element;
 mod formatter;
-mod intersperse;
-mod macros;
+pub mod macros;
 mod printer;
 
 // use crate::printer::Printer;
+use crate::{write, FormatOptions};
 pub use arguments::{Argument, Arguments};
 pub use buffer::{Buffer, VecBuffer};
 pub use builders::*;
 pub use format_element::*;
 pub use formatter::*;
-use rome_rowan::{SyntaxError, TextRange, TextSize};
+use rome_rowan::{SyntaxError, SyntaxResult, TextRange, TextSize};
 
 /// Lightweight sourcemap marker between source and output tokens
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -108,8 +108,8 @@ impl Display for FormatError {
     }
 }
 
-impl From<SyntaxError> for FormatError {
-    fn from(syntax: SyntaxError) -> Self {
+impl From<&SyntaxError> for FormatError {
+    fn from(syntax: &SyntaxError) -> Self {
         match syntax {
             SyntaxError::MissingRequiredChild => FormatError::MissingRequiredChild,
         }
@@ -151,6 +151,37 @@ impl<T: ?Sized + Format> Format for RefMut<'_, T> {
         Format::format(&*(self.deref()), f)
     }
 }
+
+impl<T> Format for Option<T>
+where
+    T: Format,
+{
+    fn format(&self, formatter: &mut Formatter) -> Result<()> {
+        match self {
+            Some(value) => write!(formatter, value),
+            None => Ok(()),
+        }
+    }
+}
+
+impl<T> Format for SyntaxResult<T>
+where
+    T: Format,
+{
+    fn format(&self, formatter: &mut Formatter) -> Result<()> {
+        match self {
+            Ok(value) => write!(formatter, value),
+            Err(err) => Err(err.into()),
+        }
+    }
+}
+
+// pub trait FormatOption {
+//     fn format_or(&self, alternative: &mut dyn Format) -> Result<()>;
+//
+//     // if let Some(element) { when write!(
+//     fn format_with_or_empty<F>(&self, with) -> Result<()> where F: Fn(Self, )
+// }
 
 pub struct FormatWith<T>
 where

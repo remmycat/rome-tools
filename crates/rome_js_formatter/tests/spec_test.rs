@@ -92,7 +92,7 @@ impl SnapshotContent {
             output.push_str("## Unimplemented nodes/tokens");
             output.push_str("\n\n");
             for (range, text) in formatted.verbatim() {
-                output.push_str(&format!("{:?} => {:?}\n", text, range));
+                output.push_str(&std::format!("{:?} => {:?}\n", text, range));
             }
         }
         self.output.push((output, options));
@@ -113,9 +113,9 @@ impl SnapshotContent {
         let iter = self.output.iter();
         for (index, (content, options)) in iter.enumerate() {
             let formal_index = index + 1;
-            output.push_str(format!("## Output {formal_index}\n").as_str());
+            output.push_str(std::format!("## Output {formal_index}\n").as_str());
             output.push_str("-----\n");
-            output.push_str(format!("{}", options).as_str());
+            output.push_str(std::format!("{}", options).as_str());
             output.push_str("-----\n");
             output.push_str(content.as_str());
         }

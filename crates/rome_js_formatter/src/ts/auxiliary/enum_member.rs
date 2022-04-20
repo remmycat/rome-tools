@@ -1,6 +1,7 @@
 use crate::formatter_traits::FormatTokenAndNode;
 use crate::utils::format_initializer_clause;
-use crate::{format_elements, FormatElement, FormatResult, Formatter, ToFormatElement};
+use crate::{FormatElement, FormatResult, Formatter, ToFormatElement};
+use rome_formatter::format_elements;
 use rome_js_syntax::TsEnumMember;
 
 impl ToFormatElement for TsEnumMember {

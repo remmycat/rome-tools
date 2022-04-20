@@ -1,11 +1,11 @@
+use rome_formatter::format_elements;
 use rome_js_syntax::JsForOfStatement;
 
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
 
 use crate::utils::format_head_body_statement;
 use crate::{
-    format_elements, soft_line_break_or_space, space_token, FormatElement, FormatResult, Formatter,
-    ToFormatElement,
+    soft_line_break_or_space, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
 use rome_js_syntax::JsForOfStatementFields;
 

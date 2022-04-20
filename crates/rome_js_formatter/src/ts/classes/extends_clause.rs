@@ -1,8 +1,9 @@
 use crate::formatter_traits::FormatTokenAndNode;
 use crate::{
-    block_indent, format_elements, group_elements, if_group_breaks, if_group_fits_on_single_line,
-    soft_block_indent, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
+    block_indent, group_elements, if_group_breaks, if_group_fits_on_single_line, soft_block_indent,
+    space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::{TsExtendsClause, TsExtendsClauseFields};
 
 impl ToFormatElement for TsExtendsClause {

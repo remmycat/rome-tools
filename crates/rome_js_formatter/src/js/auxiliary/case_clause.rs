@@ -1,11 +1,9 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
 use crate::FormatResult;
 
-use crate::{
-    format_elements, hard_line_break, indent, space_token, FormatElement, Formatter,
-    ToFormatElement,
-};
+use crate::{hard_line_break, indent, space_token, FormatElement, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsCaseClause;
 use rome_js_syntax::JsCaseClauseFields;

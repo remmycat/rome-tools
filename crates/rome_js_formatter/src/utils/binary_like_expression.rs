@@ -1,10 +1,11 @@
 use crate::formatter_traits::FormatTokenAndNode;
 use crate::{
-    empty_element, format_elements, group_elements, hard_group_elements, hard_line_break,
-    join_elements, soft_block_indent, soft_line_break_or_space, soft_line_indent_or_space,
-    space_token, token, FormatElement, FormatResult, Formatter, ToFormatElement,
+    empty_element, group_elements, hard_group_elements, hard_line_break, join_elements,
+    soft_block_indent, soft_line_break_or_space, soft_line_indent_or_space, space_token, token,
+    FormatElement, FormatResult, Formatter, ToFormatElement,
 };
 
+use rome_formatter::format_elements;
 use rome_js_syntax::{
     JsAnyExpression, JsAnyInProperty, JsBinaryExpression, JsBinaryOperator, JsInExpression,
     JsInstanceofExpression, JsLanguage, JsLogicalExpression, JsLogicalOperator, JsPrivateName,

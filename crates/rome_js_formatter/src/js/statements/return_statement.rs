@@ -1,9 +1,10 @@
 use crate::formatter_traits::FormatTokenAndNode;
 use crate::utils::format_with_semicolon;
 use crate::{
-    empty_element, format_elements, group_elements, soft_block_indent, space_token, token,
-    FormatElement, FormatResult, Formatter, ToFormatElement,
+    empty_element, group_elements, soft_block_indent, space_token, token, FormatElement,
+    FormatResult, Formatter, ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::{JsReturnStatement, JsReturnStatementFields, JsSyntaxKind};
 use rome_rowan::AstNode;
 

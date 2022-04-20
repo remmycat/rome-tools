@@ -1,3 +1,4 @@
+use rome_formatter::format_elements;
 use rome_js_syntax::{
     JsAnyArrayAssignmentPatternElement, JsAnyArrayBindingPatternElement, JsAnyArrayElement,
     JsLanguage,
@@ -5,7 +6,7 @@ use rome_js_syntax::{
 use rome_rowan::{AstNode, AstSeparatedList};
 
 use crate::{
-    empty_element, format_elements,
+    empty_element,
     formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode},
     if_group_breaks, join_elements_soft_line, token, FormatElement, FormatResult, Formatter,
     ToFormatElement,

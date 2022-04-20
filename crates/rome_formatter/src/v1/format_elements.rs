@@ -47,13 +47,13 @@ macro_rules! format_elements {
     // called for things like format_tokens!["hey"]
     ($element:expr) => {
         {
-            use $crate::FormatElement;
+            use $crate::v1::FormatElement;
             FormatElement::from($element)
         }
     };
 
     ( $( $element:expr ),+ $(,)?) => {{
-        use $crate::{FormatElement, concat_elements};
+        use $crate::v1::{FormatElement, concat_elements};
         concat_elements([
             $(
                      FormatElement::from($element)

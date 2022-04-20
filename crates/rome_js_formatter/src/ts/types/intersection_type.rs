@@ -1,8 +1,9 @@
 use crate::formatter_traits::FormatTokenAndNode;
 use crate::{
-    format_elements, group_elements, if_group_breaks, indent, soft_line_break, space_token, token,
-    FormatElement, FormatResult, Formatter, ToFormatElement, Token,
+    group_elements, if_group_breaks, indent, soft_line_break, space_token, token, FormatElement,
+    FormatResult, Formatter, ToFormatElement, Token,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::TsIntersectionType;
 use rome_js_syntax::TsIntersectionTypeFields;
 

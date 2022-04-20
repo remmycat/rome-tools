@@ -1,8 +1,8 @@
 use crate::{
-    concat_elements, empty_element, format_elements, formatter_traits::FormatTokenAndNode,
-    soft_line_break_or_space, space_token, token, FormatElement, FormatResult, Formatter,
-    ToFormatElement,
+    concat_elements, empty_element, formatter_traits::FormatTokenAndNode, soft_line_break_or_space,
+    space_token, token, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::TsUnionTypeVariantList;
 use rome_rowan::AstSeparatedList;
 

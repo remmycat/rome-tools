@@ -1,20 +1,14 @@
-pub mod format_element;
-pub mod format_elements;
-pub mod intersperse;
-pub mod printer;
-use crate::printer::Printer;
-pub use format_element::{
-    block_indent, comment, concat_elements, empty_element, empty_line, fill_elements,
-    group_elements, hard_group_elements, hard_line_break, if_group_breaks,
-    if_group_fits_on_single_line, indent, join_elements, join_elements_hard_line,
-    join_elements_soft_line, join_elements_with, line_suffix, normalize_newlines,
-    soft_block_indent, soft_line_break, soft_line_break_or_space, soft_line_indent_or_space,
-    space_token, token, FormatElement, Token, Verbatim, LINE_TERMINATORS,
-};
+pub mod v1;
+pub mod v2;
+
+pub use v1::*;
+
+use crate::v1::FormatElement;
 use rome_rowan::{TextRange, TextSize};
 use std::fmt::{self, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
+use v1::printer::Printer;
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum IndentStyle {
@@ -50,8 +44,8 @@ impl FromStr for IndentStyle {
 impl Display for IndentStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            IndentStyle::Tab => write!(f, "Tab"),
-            IndentStyle::Space(size) => write!(f, "Spaces, size: {}", size),
+            IndentStyle::Tab => std::write!(f, "Tab"),
+            IndentStyle::Space(size) => std::write!(f, "Spaces, size: {}", size),
         }
     }
 }
@@ -89,7 +83,7 @@ pub enum ParseLineWidthError {
 
 impl Display for ParseLineWidthError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> fmt::Result {
-        write!(fmt, "{self:?}")
+        std::write!(fmt, "{self:?}")
     }
 }
 
@@ -153,8 +147,8 @@ impl FromStr for QuoteStyle {
 impl Display for QuoteStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            QuoteStyle::Double => write!(f, "Double Quotes"),
-            QuoteStyle::Single => write!(f, "Single Quotes"),
+            QuoteStyle::Double => std::write!(f, "Double Quotes"),
+            QuoteStyle::Single => std::write!(f, "Single Quotes"),
         }
     }
 }

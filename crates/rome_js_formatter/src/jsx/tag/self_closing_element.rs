@@ -1,10 +1,10 @@
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
 use crate::group_elements;
 use crate::{
-    format_elements, soft_block_indent, soft_line_break_or_space, space_token, FormatElement,
-    FormatResult, Formatter, ToFormatElement,
+    soft_block_indent, soft_line_break_or_space, space_token, FormatElement, FormatResult,
+    Formatter, ToFormatElement,
 };
-use rome_formatter::join_elements;
+use rome_formatter::{format_elements, join_elements};
 use rome_js_syntax::JsxSelfClosingElement;
 
 impl ToFormatElement for JsxSelfClosingElement {

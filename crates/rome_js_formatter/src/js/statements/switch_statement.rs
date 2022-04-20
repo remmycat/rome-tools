@@ -1,9 +1,7 @@
 use crate::formatter_traits::FormatTokenAndNode;
-use crate::{
-    format_elements, join_elements_hard_line, space_token, FormatElement, Formatter,
-    ToFormatElement,
-};
 use crate::{hard_group_elements, FormatResult};
+use crate::{join_elements_hard_line, space_token, FormatElement, Formatter, ToFormatElement};
+use rome_formatter::format_elements;
 use rome_js_syntax::{JsSwitchStatement, JsSwitchStatementFields};
 use rome_rowan::AstNode;
 

@@ -1,5 +1,6 @@
-use crate::{format_element, to_format_element, FormatOptions};
+use crate::{to_format_element, FormatOptions};
 use rome_diagnostics::{file::SimpleFiles, termcolor, Emitter};
+use rome_formatter::format_element;
 use rome_js_parser::{parse, SourceType};
 use rome_js_syntax::JsSyntaxNode;
 

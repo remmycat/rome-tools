@@ -1,5 +1,6 @@
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
-use crate::{format_elements, FormatElement, FormatResult, Formatter, ToFormatElement};
+use crate::{FormatElement, FormatResult, Formatter, ToFormatElement};
+use rome_formatter::format_elements;
 use rome_js_syntax::TsThisParameter;
 
 impl ToFormatElement for TsThisParameter {

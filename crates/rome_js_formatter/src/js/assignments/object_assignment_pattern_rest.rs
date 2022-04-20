@@ -1,6 +1,7 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
-use crate::{format_elements, FormatElement, FormatResult, Formatter, ToFormatElement};
+use crate::{FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsObjectAssignmentPatternRest;
 use rome_js_syntax::JsObjectAssignmentPatternRestFields;

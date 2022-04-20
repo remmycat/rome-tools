@@ -1,5 +1,6 @@
-use crate::{write, Arguments, FormatOptions};
-use crate::{Buffer, Format, Formatter};
+use super::Arguments;
+use super::{Buffer, Format, Formatter};
+use crate::{write, FormatOptions};
 use rome_rowan::{
     Language, SyntaxToken, SyntaxTokenText, SyntaxTriviaPieceComments, TextLen, TextRange, TextSize,
 };
@@ -23,7 +24,7 @@ pub enum FormatElement {
     /// A token that should be printed as is, see [token] for documentation and examples.
     Token(Token),
 
-    /// A token that tracks tokens/nodes that are printed using [`format_verbatim`](crate::Formatter::format_verbatim) API
+    /// A token that tracks tokens/nodes that are printed using [`format_verbatim`](super::Formatter::format_verbatim) API
     VerbatimStart(VerbatimKind),
     VerbatimEnd,
 
@@ -241,7 +242,7 @@ impl Deref for Token {
 }
 
 impl Format for Token {
-    fn format(&self, formatter: &mut crate::Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut super::Formatter) -> super::Result<()> {
         formatter.write_element(FormatElement::Token(self.clone()))
     }
 }
@@ -317,7 +318,7 @@ pub struct Line {
 }
 
 impl Format for Line {
-    fn format(&self, formatter: &mut crate::Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut super::Formatter) -> super::Result<()> {
         formatter.write_element(FormatElement::Line(self.mode))
     }
 }
@@ -331,7 +332,7 @@ pub struct LineSuffix<'args> {
 }
 
 impl Format for LineSuffix<'_> {
-    fn format(&self, formatter: &mut crate::Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut super::Formatter) -> super::Result<()> {
         formatter.write_element(FormatElement::LineSuffixStart)?;
         formatter.write_fmt(&self.args)?;
         formatter.write_element(FormatElement::LineSuffixEnd)?;
@@ -349,7 +350,7 @@ pub struct Comment<'args> {
 }
 
 impl Format for Comment<'_> {
-    fn format(&self, formatter: &mut crate::Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut super::Formatter) -> super::Result<()> {
         formatter.write_element(FormatElement::CommentStart)?;
         formatter.write_fmt(&self.args)?;
         formatter.write_element(FormatElement::CommentEnd)?;
@@ -365,7 +366,7 @@ pub const fn comment(args: Arguments) -> Comment {
 pub struct Space;
 
 impl Format for Space {
-    fn format(&self, formatter: &mut crate::Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut super::Formatter) -> super::Result<()> {
         formatter.write_element(FormatElement::Space)
     }
 }
@@ -409,7 +410,7 @@ pub fn soft_line_indent_or_space(content: &dyn Format) -> Indent {
 }
 
 impl Format for Indent<'_> {
-    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut Formatter) -> super::Result<()> {
         formatter.write_element(FormatElement::IndentStart)?;
 
         if let Some(line_mode) = self.line_mode {
@@ -435,7 +436,7 @@ pub struct Group<F: Format> {
 }
 
 impl<F: Format> Format for Group<F> {
-    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut Formatter) -> super::Result<()> {
         let mut buffer = TriviaAdapter {
             inner: formatter,
             trailing: vec![],
@@ -458,7 +459,7 @@ struct TriviaAdapter<'fmt, 'buf> {
 }
 
 impl TriviaAdapter<'_, '_> {
-    fn finish(&mut self) -> crate::Result<()> {
+    fn finish(&mut self) -> super::Result<()> {
         self.inner.write_element(FormatElement::GroupEnd)?;
 
         for element in self.trailing.drain(..) {
@@ -474,7 +475,7 @@ impl Buffer for TriviaAdapter<'_, '_> {
         self.inner.options()
     }
 
-    fn write_element(&mut self, element: FormatElement) -> crate::Result<()> {
+    fn write_element(&mut self, element: FormatElement) -> super::Result<()> {
         if !self.passed_trivia && matches!(element, FormatElement::CommentStart) {
             self.in_comment = true;
         } else if self.in_comment && matches!(element, FormatElement::CommentEnd) {
@@ -554,7 +555,7 @@ where
     F: Format,
     I: Iterator<Item = F> + Clone,
 {
-    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut Formatter) -> super::Result<()> {
         if let Some(items) = self.items.take() {
             if let Some(with) = self.with {
                 formatter
@@ -606,7 +607,7 @@ where
     F: Format,
     I: Iterator<Item = F> + Clone,
 {
-    fn format(&self, formatter: &mut Formatter) -> crate::Result<()> {
+    fn format(&self, formatter: &mut Formatter) -> super::Result<()> {
         if let Some(items) = self.items.take() {
             if let Some(with) = self.with {
                 formatter

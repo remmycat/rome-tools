@@ -13,24 +13,70 @@ use std::fmt::{self, Display};
 
 pub use formatter::Formatter;
 pub use rome_formatter::intersperse::{Intersperse, IntersperseFn};
-pub use rome_formatter::printer::{Printer, PrinterOptions};
-pub use rome_formatter::{
+pub use rome_formatter::v1::printer::{Printer, PrinterOptions};
+pub use rome_formatter::v1::{
     block_indent, comment, concat_elements, empty_element, empty_line, fill_elements,
-    format_element, format_elements, group_elements, hard_group_elements, hard_line_break,
-    if_group_breaks, if_group_fits_on_single_line, indent, join_elements, join_elements_hard_line,
+    format_elements, group_elements, hard_group_elements, hard_line_break, if_group_breaks,
+    if_group_fits_on_single_line, indent, join_elements, join_elements_hard_line,
     join_elements_soft_line, join_elements_with, line_suffix, soft_block_indent, soft_line_break,
-    soft_line_break_or_space, soft_line_indent_or_space, space_token, token, FormatElement,
-    FormatOptions, Formatted, IndentStyle, QuoteStyle, Token, Verbatim, LINE_TERMINATORS,
+    soft_line_break_or_space, soft_line_indent_or_space, space_token, token, FormatElement, Token,
+    Verbatim, LINE_TERMINATORS,
 };
+use rome_formatter::v2::Buffer;
+pub use rome_formatter::{format, v2::Format, FormatOptions, Formatted, IndentStyle, QuoteStyle};
 use rome_js_syntax::JsSyntaxNode;
-use rome_rowan::TextSize;
 use rome_rowan::TokenAtOffset;
+use rome_rowan::{AstNode, TextSize};
 use rome_rowan::{SyntaxError, TextRange};
 
 /// This trait should be implemented on each node/value that should have a formatted representation
 pub trait ToFormatElement {
     fn to_format_element(&self, formatter: &Formatter) -> FormatResult<FormatElement>;
 }
+
+// impl<T> ToFormatElement for T
+// where
+//     T: Format,
+// {
+//     fn to_format_element(&self, formatter: &Formatter) -> FormatResult<FormatElement> {
+//         let formatted = format!(*formatter.options(), self)?;
+//
+//         // TODO convert v2 elements to v1 element
+//         // formatted.into_vec();
+//
+//         Ok(empty_element())
+//     }
+// }
+
+// pub struct LegacyNode<T> {}
+
+// pub struct LegacyToken<T>
+// where
+//     T: AstNode + ToFormatElement,
+// {
+//     element: ToFormatElement,
+// }
+
+// impl<T> Format for Legacy<T>
+// where
+//     T: ToFormatElement,
+// {
+//     fn format(
+//         &self,
+//         formatter: &mut rome_formatter::v2::Formatter,
+//     ) -> rome_formatter::v2::Result<()> {
+//         // TODO use same option types
+//         let formatter = Formatter::new(*formatter.options());
+//
+//
+//
+//         // Sighlty more compilcated because legacy does node formatting outside of `to_format_element`
+//         // and new implementation does it inline
+//         self.element.to_format_element(formatter);
+//
+//         Ok(())
+//     }
+// }
 
 /// Public return type of the formatter
 pub type FormatResult<F> = Result<F, FormatError>;

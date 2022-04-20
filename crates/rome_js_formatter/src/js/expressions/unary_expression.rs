@@ -1,9 +1,10 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
 use crate::utils::is_simple_expression;
 use crate::{
-    format_elements, group_elements, soft_block_indent, space_token, token, FormatElement,
-    FormatResult, Formatter, ToFormatElement,
+    group_elements, soft_block_indent, space_token, token, FormatElement, FormatResult, Formatter,
+    ToFormatElement,
 };
 
 use rome_js_syntax::JsPreUpdateOperator;

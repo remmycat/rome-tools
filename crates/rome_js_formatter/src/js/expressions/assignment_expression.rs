@@ -1,8 +1,9 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
 use crate::{
-    format_elements, group_elements, soft_line_indent_or_space, space_token, FormatElement,
-    FormatResult, Formatter, ToFormatElement,
+    group_elements, soft_line_indent_or_space, space_token, FormatElement, FormatResult, Formatter,
+    ToFormatElement,
 };
 
 use rome_js_syntax::JsAssignmentExpression;

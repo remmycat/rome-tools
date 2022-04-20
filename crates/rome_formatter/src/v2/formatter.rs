@@ -1,4 +1,5 @@
-use crate::{Arguments, Buffer, FillBuilder, Format, FormatElement, JoinBuilder};
+use super::{Arguments, Buffer, FillBuilder, Format, FormatElement, JoinBuilder};
+use crate::FormatOptions;
 use std::fmt;
 use std::num::ParseIntError;
 use std::str::FromStr;
@@ -36,11 +37,11 @@ impl<'buf> Formatter<'buf> {
 }
 
 impl Buffer for Formatter<'_> {
-    fn write_element(&mut self, element: FormatElement) -> crate::Result<()> {
+    fn write_element(&mut self, element: FormatElement) -> super::Result<()> {
         self.buffer.write_element(element)
     }
 
-    fn write_fmt(self: &mut Self, args: &Arguments) -> crate::Result<()> {
+    fn write_fmt(self: &mut Self, args: &Arguments) -> super::Result<()> {
         for argument in args.items() {
             argument.format(self)?;
         }
@@ -50,36 +51,6 @@ impl Buffer for Formatter<'_> {
 
     fn options(&self) -> &FormatOptions {
         self.buffer.options()
-    }
-}
-
-#[derive(Debug, Clone, Copy, Default)]
-pub struct FormatOptions {
-    /// The indent style.
-    pub indent_style: IndentStyle,
-
-    /// What's the max width of a line. Defaults to 80.
-    pub line_width: LineWidth,
-
-    // The style for quotes. Defaults to double.
-    pub quote_style: QuoteStyle,
-}
-
-impl FormatOptions {
-    pub fn new(indent_style: IndentStyle) -> Self {
-        Self {
-            indent_style,
-            ..Self::default()
-        }
-    }
-}
-
-impl fmt::Display for FormatOptions {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "Indent style: {}", self.indent_style)?;
-        writeln!(f, "Line width: {}", self.line_width.value())?;
-        writeln!(f, "Quote style: {}", self.quote_style)?;
-        Ok(())
     }
 }
 

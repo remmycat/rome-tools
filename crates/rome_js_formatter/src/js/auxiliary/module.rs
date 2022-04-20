@@ -1,8 +1,9 @@
 use crate::utils::format_interpreter;
 use crate::{
-    format_elements, formatter_traits::FormatTokenAndNode, hard_line_break, FormatElement,
-    FormatResult, Formatter, ToFormatElement,
+    formatter_traits::FormatTokenAndNode, hard_line_break, FormatElement, FormatResult, Formatter,
+    ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::JsModule;
 use rome_js_syntax::JsModuleFields;
 

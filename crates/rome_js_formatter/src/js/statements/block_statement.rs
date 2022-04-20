@@ -1,8 +1,7 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
-use crate::{
-    format_elements, hard_line_break, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{hard_line_break, FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsBlockStatement;
 

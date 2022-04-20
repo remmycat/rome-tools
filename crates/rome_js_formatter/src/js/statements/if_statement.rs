@@ -2,10 +2,9 @@ use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
 use crate::{
     block_indent, concat_elements, group_elements, hard_group_elements, hard_line_break, token,
 };
+use rome_formatter::format_elements;
 
-use crate::{
-    format_elements, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{space_token, FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsSyntaxToken;
 use rome_js_syntax::{JsAnyStatement, JsElseClauseFields, JsIfStatement};

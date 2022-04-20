@@ -1,9 +1,8 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
 use crate::utils::format_head_body_statement;
-use crate::{
-    format_elements, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{space_token, FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsWhileStatement;
 use rome_js_syntax::JsWhileStatementFields;

@@ -2,9 +2,9 @@
 #[macro_export]
 macro_rules! format_args {
     ($($value:expr),+ $(,)?) => {
-        &$crate::Arguments::new(&[
+        &$crate::v2::Arguments::new(&[
             $(
-                $crate::Argument::new(&$value)
+                $crate::v2::Argument::new(&$value)
             ),+
         ])
     }
@@ -13,7 +13,7 @@ macro_rules! format_args {
 #[macro_export]
 macro_rules! write {
     ($dst:expr, $($arg:expr),+ $(,)?) => {{
-        use $crate::Buffer;
+        use $crate::v2::Buffer;
         $dst.write_fmt($crate::format_args!($($arg),+))
     }}
 }
@@ -27,7 +27,7 @@ macro_rules! write {
 /// ## Examples
 ///
 /// ```
-/// use rome_new_formatter::{space_token, token, FormatElement, Token, format, FormatOptions};
+/// use rome_new_formatter::v2::{space_token, token, FormatElement, Token, format, FormatOptions};
 /// let formatted = format!(FormatOptions::default(), token("("), token("a"), token(")")).unwrap();
 ///
 /// assert_eq!(formatted.into_vec(), vec![
@@ -39,13 +39,14 @@ macro_rules! write {
 #[macro_export]
 macro_rules! format {
     ($options:expr, $($arg:expr),+ $(,)?) => {{
-        ($crate::format($options, $crate::format_args!($($arg),+)))
+        ($crate::v2::format($options, $crate::format_args!($($arg),+)))
     }}
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{space_token, token, FormatElement, FormatOptions, Token, VecBuffer};
+    use crate::v2::{space_token, token, FormatElement, Token, VecBuffer};
+    use crate::{format, FormatOptions};
 
     #[test]
     fn test_format_args() {

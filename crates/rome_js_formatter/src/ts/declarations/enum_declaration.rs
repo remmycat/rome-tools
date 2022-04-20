@@ -1,9 +1,10 @@
 use crate::formatter::TrailingSeparator;
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
 use crate::{
-    format_elements, join_elements, soft_line_break_or_space, space_token, token, FormatElement,
-    FormatResult, Formatter, ToFormatElement,
+    join_elements, soft_line_break_or_space, space_token, token, FormatElement, FormatResult,
+    Formatter, ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::{TsEnumDeclaration, TsEnumDeclarationFields};
 
 impl ToFormatElement for TsEnumDeclaration {

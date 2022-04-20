@@ -1,11 +1,7 @@
-use crate::format_element::{
-    ConditionalGroupContent, Group, GroupPrintMode, LineMode, List, VerbatimKind,
-};
-use crate::intersperse::Intersperse;
-use crate::{
-    hard_line_break, space_token, FormatElement, FormatOptions, Formatted, IndentStyle, LineWidth,
-    SourceMarker, TextRange,
-};
+use super::intersperse::Intersperse;
+use super::{hard_line_break, space_token, FormatElement};
+use super::{ConditionalGroupContent, Group, GroupPrintMode, LineMode, List, VerbatimKind};
+use crate::{FormatOptions, Formatted, IndentStyle, LineWidth, SourceMarker, TextRange};
 use rome_rowan::TextSize;
 use std::iter::once;
 
@@ -641,13 +637,14 @@ impl<'a> ElementCallQueue<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::format_element::join_elements;
-    use crate::printer::{LineEnding, Printer, PrinterOptions};
-    use crate::{
-        block_indent, empty_line, format_elements, group_elements, hard_line_break,
-        if_group_breaks, soft_block_indent, soft_line_break, soft_line_break_or_space, token,
-        FormatElement, Formatted, LineWidth,
+    use crate::v1::format_element::join_elements;
+    use crate::v1::printer::{LineEnding, Printer, PrinterOptions};
+    use crate::v1::{
+        block_indent, empty_line, group_elements, hard_line_break, if_group_breaks,
+        soft_block_indent, soft_line_break, soft_line_break_or_space, token, FormatElement,
     };
+
+    use crate::{format_elements, Formatted, LineWidth};
 
     /// Prints the given element with the default printer options
     fn print_element<T: Into<FormatElement>>(element: T) -> Formatted {

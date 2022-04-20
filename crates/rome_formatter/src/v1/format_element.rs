@@ -1,4 +1,4 @@
-use crate::intersperse::{Intersperse, IntersperseFn};
+use super::intersperse::{Intersperse, IntersperseFn};
 use crate::{format_elements, TextRange, TextSize};
 use rome_rowan::{
     Language, SyntaxNode, SyntaxToken, SyntaxTokenText, SyntaxTriviaPieceComments, TextLen,
@@ -1456,11 +1456,13 @@ impl From<Option<FormatElement>> for FormatElement {
 #[cfg(test)]
 mod tests {
 
-    use crate::format_element::{
+    use crate::v1::format_element::{
         empty_element, join_elements, normalize_newlines, ConditionalGroupContent, List,
         VerbatimKind, LINE_TERMINATORS,
     };
-    use crate::{concat_elements, space_token, token, FormatElement, TextRange, Token, Verbatim};
+    use crate::v1::{concat_elements, space_token, token, FormatElement, Token, Verbatim};
+
+    use crate::TextRange;
 
     #[test]
     fn concat_elements_returns_a_list_token_containing_the_passed_in_elements() {

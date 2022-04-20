@@ -1,7 +1,7 @@
 use crate::{
-    format_elements, formatter_traits::FormatTokenAndNode, FormatElement, FormatResult, Formatter,
-    ToFormatElement,
+    formatter_traits::FormatTokenAndNode, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
+use rome_formatter::format_elements;
 
 use rome_js_syntax::JsFunctionBody;
 use rome_js_syntax::JsFunctionBodyFields;

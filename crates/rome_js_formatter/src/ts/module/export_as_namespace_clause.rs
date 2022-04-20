@@ -1,8 +1,7 @@
 use crate::formatter_traits::FormatTokenAndNode;
 use crate::utils::format_with_semicolon;
-use crate::{
-    format_elements, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{space_token, FormatElement, FormatResult, Formatter, ToFormatElement};
+use rome_formatter::format_elements;
 use rome_js_syntax::TsExportAsNamespaceClause;
 use rome_js_syntax::TsExportAsNamespaceClauseFields;
 
@@ -15,7 +14,7 @@ impl ToFormatElement for TsExportAsNamespaceClause {
             semicolon_token,
         } = self.as_fields();
 
-        format_with_semicolon(
+        let result = format_with_semicolon(
             formatter,
             format_elements![
                 as_token.format(formatter)?,
@@ -25,6 +24,7 @@ impl ToFormatElement for TsExportAsNamespaceClause {
                 name.format(formatter)?,
             ],
             semicolon_token,
-        )
+        );
+        result
     }
 }

@@ -1,8 +1,7 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
-use crate::{
-    format_elements, group_elements, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{group_elements, FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsStaticMemberExpression;
 use rome_js_syntax::JsStaticMemberExpressionFields;

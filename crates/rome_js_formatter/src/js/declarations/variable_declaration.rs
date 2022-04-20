@@ -1,8 +1,7 @@
 use crate::formatter_traits::FormatTokenAndNode;
+use rome_formatter::format_elements;
 
-use crate::{
-    format_elements, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{space_token, FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsVariableDeclaration;
 use rome_js_syntax::JsVariableDeclarationFields;

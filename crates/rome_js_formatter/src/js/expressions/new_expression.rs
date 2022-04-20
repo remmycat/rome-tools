@@ -1,8 +1,7 @@
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
+use rome_formatter::format_elements;
 
-use crate::{
-    format_elements, space_token, token, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{space_token, token, FormatElement, FormatResult, Formatter, ToFormatElement};
 
 use rome_js_syntax::JsNewExpression;
 use rome_js_syntax::JsNewExpressionFields;

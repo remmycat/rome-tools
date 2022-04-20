@@ -1,9 +1,10 @@
 use crate::formatter_traits::FormatTokenAndNode;
 use crate::utils::{is_simple_expression, FormatPrecedence};
 use crate::{
-    empty_element, format_elements, group_elements, hard_group_elements, FormatElement,
-    FormatResult, Formatter, ToFormatElement,
+    empty_element, group_elements, hard_group_elements, FormatElement, FormatResult, Formatter,
+    ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::{
     JsAnyExpression, JsParenthesizedExpression, JsParenthesizedExpressionFields, JsSyntaxKind,
     JsSyntaxNode,

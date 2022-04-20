@@ -1,9 +1,9 @@
 use crate::formatter_traits::{FormatOptionalTokenAndNode, FormatTokenAndNode};
 use crate::hard_group_elements;
 use crate::{
-    format_elements, join_elements_hard_line, space_token, FormatElement, FormatResult, Formatter,
-    ToFormatElement,
+    join_elements_hard_line, space_token, FormatElement, FormatResult, Formatter, ToFormatElement,
 };
+use rome_formatter::format_elements;
 use rome_js_syntax::JsAnyClass;
 use rome_rowan::AstNode;
 

@@ -1,9 +1,8 @@
 use crate::formatter::TriviaPrintMode;
 use crate::utils::has_formatter_suppressions;
 use crate::Token;
-use crate::{
-    empty_element, format_elements, FormatElement, FormatResult, Formatter, ToFormatElement,
-};
+use crate::{empty_element, FormatElement, FormatResult, Formatter, ToFormatElement};
+use rome_formatter::format_elements;
 use rome_js_syntax::{JsLanguage, JsSyntaxToken};
 use rome_rowan::{AstNode, SyntaxResult};
 

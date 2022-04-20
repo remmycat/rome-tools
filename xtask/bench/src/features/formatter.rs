@@ -30,15 +30,15 @@ impl FormatterMeasurement {
     }
 
     pub(crate) fn summary(&self) -> String {
-        format!("{}, Formatting: {:?}", self.id, self.total(),)
+        std::format!("{}, Formatting: {:?}", self.id, self.total(),)
     }
 }
 
 impl Display for FormatterMeasurement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let _ = writeln!(f, "\tFormatting: {:>10?}", self.formatting);
-        let _ = writeln!(f, "\t              ----------");
-        let _ = writeln!(f, "\tTotal:        {:>10?}", self.total());
+        let _ = std::writeln!(f, "\tFormatting: {:>10?}", self.formatting);
+        let _ = std::writeln!(f, "\t              ----------");
+        let _ = std::writeln!(f, "\tTotal:        {:>10?}", self.total());
 
         Ok(())
     }
