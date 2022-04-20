@@ -39,21 +39,17 @@ impl ToFormatElement for JsVariableDeclaratorList {
             .collect::<FormatResult<Vec<_>>>()?;
 
         let mut items = declarators.into_iter();
-
         let leading_element = items.next();
-        let trailing_elements = join_elements(soft_line_break_or_space(), items);
 
         Ok(group_elements(concat_elements(
-            leading_element
-                .into_iter()
-                .chain(if !trailing_elements.is_empty() {
-                    Some(indent(format_elements![
-                        soft_line_break_or_space(),
-                        trailing_elements
-                    ]))
-                } else {
-                    None
-                }),
+            leading_element.into_iter().chain(if items.len() > 0 {
+                Some(indent(format_elements![
+                    soft_line_break_or_space(),
+                    join_elements(soft_line_break_or_space(), items)
+                ]))
+            } else {
+                None
+            }),
         )))
     }
 }

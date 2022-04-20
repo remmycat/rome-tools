@@ -3,9 +3,7 @@ mod generated;
 mod syntax_node;
 
 pub use self::generated::*;
-pub use rome_rowan::{
-    SyntaxNodeText, TextLen, TextRange, TextSize, TokenAtOffset, TriviaPieceKind, WalkEvent,
-};
+pub use rome_rowan::{TextLen, TextRange, TextSize, TokenAtOffset, TriviaPieceKind, WalkEvent};
 pub use syntax_node::*;
 
 use crate::CssSyntaxKind::*;
