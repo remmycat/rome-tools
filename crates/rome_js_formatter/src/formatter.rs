@@ -1,11 +1,12 @@
 use crate::prelude::*;
 
-use rome_formatter::{normalize_newlines, FormatResult, GroupId, LINE_TERMINATORS};
-use rome_js_syntax::{JsLanguage, JsSyntaxNode, JsSyntaxToken};
+use rome_formatter::{normalize_newlines, ConcatBuilder, FormatResult, GroupId, LINE_TERMINATORS};
+use rome_js_syntax::{JsLanguage, JsSyntaxKind, JsSyntaxNode, JsSyntaxToken};
 
 use crate::{AsFormat, JsFormatOptions};
-use rome_rowan::{AstNode, AstNodeList, AstSeparatedList, Language, SyntaxTriviaPiece, TextRange};
+use rome_rowan::{AstNode, AstNodeList, AstSeparatedList, Language, SyntaxKind, SyntaxTriviaPiece};
 
+use rome_rowan::syntax::SyntaxTrivia;
 use std::iter::once;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -187,175 +188,74 @@ fn format_verbatim_node_or_token(
 }
 
 pub(crate) fn format_trailing_trivia(token: &JsSyntaxToken) -> FormatElement {
-    format_trailing_trivia_pieces(token.trailing_trivia().pieces())
-}
+    let pieces = token.trailing_trivia().pieces();
+    let mut elements = ConcatBuilder::new();
+    let mut has_inline_comment = false;
 
-fn format_trailing_trivia_pieces<I>(pieces: I) -> FormatElement
-where
-    I: IntoIterator<Item = SyntaxTriviaPiece<JsLanguage>>,
-{
-    let mut elements = Vec::new();
+    for comment in pieces.filter_map(|piece| piece.as_comments()) {
+        let is_single_line = comment.text().trim_start().starts_with("//");
 
-    for piece in pieces {
-        if let Some(comment) = piece.as_comments() {
-            let is_single_line = comment.text().trim_start().starts_with("//");
+        let comment = FormatElement::from(Token::from(comment));
 
-            let comment = FormatElement::from(Token::from(comment));
+        let content = if !is_single_line {
+            let first_inline_comment = !has_inline_comment;
+            has_inline_comment = true;
 
-            let content = if !is_single_line {
-                format_elements![space_token(), comment, space_token(),]
+            if first_inline_comment
+                && matches!(
+                    token.kind(),
+                    JsSyntaxKind::L_PAREN
+                        | JsSyntaxKind::L_CURLY
+                        | JsSyntaxKind::L_BRACK
+                        | JsSyntaxKind::DOLLAR_CURLY
+                )
+            {
+                comment
             } else {
-                format_elements![
-                    line_suffix(format_elements![space_token(), comment]),
-                    expand_parent()
-                ]
-            };
+                format_elements![space_token(), comment]
+            }
+        } else {
+            format_elements![
+                line_suffix(format_elements![space_token(), comment]),
+                expand_parent()
+            ]
+        };
 
-            elements.push(crate::comment(content));
-        }
+        elements.entry(crate::comment(content));
     }
 
-    concat_elements(elements)
+    if has_inline_comment
+        && !matches!(
+            token.next_token().map(|t| t.kind()),
+            Some(
+                JsSyntaxKind::R_BRACK
+                    | JsSyntaxKind::R_PAREN
+                    | JsSyntaxKind::R_CURLY
+                    | JsSyntaxKind::SEMICOLON
+                    | JsSyntaxKind::COMMA
+            ) | None
+        )
+    {
+        // TODO test if there's no leading trivia?
+        elements.entry(space_token());
+    }
+
+    // TODO would it make more sense to format all trivia that appear between the current and the previous token
+    // at once?
+
+    elements.finish()
 }
 
 pub(super) fn format_leading_trivia(
     token: &JsSyntaxToken,
-    trim_mode: TriviaPrintMode,
-) -> FormatElement {
+    mut trim_mode: TriviaPrintMode,
+) -> FormatResult<FormatElement> {
     // Checks whether the previous token has any trailing newline
     let has_trailing_newline = token
         .prev_token()
         .and_then(|token| token.trailing_trivia().last())
         .map_or(false, |trivia| trivia.is_newline());
 
-    format_leading_trivia_pieces(
-        token.leading_trivia().pieces(),
-        trim_mode,
-        has_trailing_newline,
-    )
-    .unwrap_or_else(|_| {
-        format_leading_trivia_with_skipped_tokens(token, trim_mode, has_trailing_newline)
-    })
-}
-
-/// Formats the leading trivia of a token that has leading skipped trivia.
-///
-/// It splits the leading trivia piece into four parts, so that it behaves as if it is a regular token:
-/// 1. All pieces that come before the first skipped trivia token.
-/// 2. All the skipped trivia pieces, formatted as is.
-/// 3. Any trivia after the last skipped token trivia up to, but not including, the first line break.
-/// 4. The leading trivia of the token.
-///
-/// ## Returns
-/// The format element for the tokens leading trivia.
-///
-/// ## Panics
-///
-/// If called on a token that does not have skipped trivia
-fn format_leading_trivia_with_skipped_tokens(
-    token: &JsSyntaxToken,
-    trim_mode: TriviaPrintMode,
-    has_trailing_newline: bool,
-) -> FormatElement {
-    let mut skipped_trivia_range: Option<TextRange> = None;
-    // The leading trivia for the first skipped token trivia OR the leading trivia for the token
-    let mut trailing_trivia = vec![];
-    // The trailing trivia for the last skipped token trivia
-    let mut leading_trivia = vec![];
-    //  The formatted elements
-    let mut elements = vec![];
-    let mut after_newline = true;
-
-    for piece in token.leading_trivia().pieces() {
-        if piece.is_skipped() {
-            if let Some(previous_range) = skipped_trivia_range {
-                // Another skipped token trivia: `.. first_skipped....piece`. Everything between the skipped token trivia should
-                // be formatted as is.
-                skipped_trivia_range = Some(previous_range.cover(piece.text_range()));
-                // Clear the collected leading/trailing trivia. They are part of the skipped
-                // token trivia range.
-                leading_trivia.clear();
-                trailing_trivia.clear();
-            } else {
-                // This is the first skipped token trivia.
-                // Format the  collected leading trivia as the leading trivia of this "skipped token trivia"
-                skipped_trivia_range = Some(piece.text_range());
-                elements.push(
-                    format_leading_trivia_pieces(
-                        leading_trivia.drain(..),
-                        trim_mode,
-                        has_trailing_newline,
-                    )
-                    .expect("All skipped trivia pieces should have been filtered out"),
-                );
-            }
-
-            after_newline = false;
-            continue;
-        }
-
-        // Everything coming after a new line (including the new line) is considered a leading trivia and not trailing trivia.
-        if piece.is_newline() {
-            after_newline = true;
-        }
-
-        if after_newline {
-            leading_trivia.push(piece);
-        } else {
-            trailing_trivia.push(piece);
-        }
-    }
-
-    let skipped_trivia_range = skipped_trivia_range.expect(
-        "Only call this method for leading trivia containing at least one skipped token trivia.",
-    );
-
-    // Format the skipped token trivia range
-    elements.push(FormatElement::from(Token::new_syntax_token_slice(
-        token,
-        skipped_trivia_range,
-    )));
-
-    // `print_trailing_trivia_pieces` and `format_leading_trivia_pieces` remove any whitespace except
-    // if there's a comment but removing all whitespace may have a different semantic meaning.
-    // Insert a:
-    // * space if the skipped token has no trailing trivia (`skipped\n`, also works for `skipped//comment` because the comment must either be followed by a line break or the token is the EOF).
-    // * new line if the token has any leading trivia. This can only be the case if there was any new line between the skipped trivia and the token
-    // * empty: There's literally nothing between skipped and token, so don't insert anything
-    let skipped_separator = if !trailing_trivia.is_empty() {
-        space_token()
-    } else if !leading_trivia.is_empty() {
-        hard_line_break()
-    } else {
-        empty_element()
-    };
-
-    elements.push(skipped_separator);
-    // Format the trailing pieces of the skipped token trivia
-    elements.push(format_trailing_trivia_pieces(trailing_trivia));
-
-    elements.push(
-        format_leading_trivia_pieces(leading_trivia.into_iter(), trim_mode, after_newline)
-            .expect("All skipped trivia pieces should have been filtered out"),
-    );
-
-    concat_elements(elements)
-}
-
-/// Formats the leading trivia pieces of a token.
-///
-/// ## Returns
-///
-/// Returns [Err] if the leading trivia contains any skipped trivia. Returns the formatted
-/// leading trivia otherwise.
-fn format_leading_trivia_pieces<I>(
-    pieces: I,
-    mut trim_mode: TriviaPrintMode,
-    has_trailing_newline: bool,
-) -> Result<FormatElement, ()>
-where
-    I: Iterator<Item = SyntaxTriviaPiece<JsLanguage>> + DoubleEndedIterator + ExactSizeIterator,
-{
     let mut line_count = 0;
     let mut elements = Vec::new();
 
@@ -364,7 +264,7 @@ where
     let mut has_leading_newline = false;
     let mut first_comment = 0;
 
-    let mut pieces = pieces.enumerate().peekable();
+    let mut pieces = token.leading_trivia().pieces().enumerate().peekable();
 
     // Peek at the next trivia piece, stopping if it is a comment and
     // advancing the iterator if it's not
@@ -377,7 +277,7 @@ where
         }
 
         if piece.is_skipped() {
-            return Err(());
+            return Err(FormatError::SyntaxError);
         }
 
         if piece.is_newline() {
@@ -429,7 +329,7 @@ where
         } else if piece.is_newline() && trim_mode == TriviaPrintMode::Full {
             line_count += 1;
         } else if piece.is_skipped() {
-            return Err(());
+            return Err(FormatError::SyntaxError);
         }
     }
 
@@ -458,16 +358,41 @@ pub(crate) trait JsFormatter {
         &self,
         current_token: &JsSyntaxToken,
         content_to_replace_with: FormatElement,
-    ) -> FormatElement {
+    ) -> FormatResult<FormatElement> {
+        // TODO move to Formatter
         let formatter = self.as_formatter();
+
+        // TODO: Should this pass in the new token that it belongs to now after this content has been replaced
+        // to make trim work correctly?
+        // But issue remains: If inserting a new paren, format leading will still insert a space, right?
+        // I guess currently not an issue because only formatting trailing?
+        // Example let a = 3 +2  * 3  /* test */ -> let a = 3 + (2 * 3 /* test */ );
+        // let a = 3 + (2 * 3 /* test */ ); -> let a = 3 + (2 * 3 /* test */);
+        // Two challenges: Tokens that get removed, tokens that get inserted. It's then unclear what the prevuous token was.
+
+        // The idea is that the formatter writes all comments up to the current token.
+        // Problem, needs a way to remember the last token. Main issue here, `token` doesn't go through the formatter
+        // AND replaced_token would require "rewritting? -> No, that's fine).
+        // Main problem, how to know what the previous token was. Only solution that I see at the moment
+        // is to somehow store the kind of the previous token. Together with `tracked_tokens`. The issue now becomes
+        // that it's quiet common to format the tokens out of order. But I guess we could just call into that?
+        // Except that it doesn't work for inserted tokens, except if we keep an internal map that stores the "respines".
+        // formatter.inserted_token("(", inner.first_token()); This can force the formatting of the inner.first_token() preceeding
+        // and then set an internal map that "(" preceeds inner.first_token.
+        // Ideally this could be solved by simply getting formatter.elements.last() when we have a single mutable buffer.
+        // This requires two things:
+        // * Extend the formatter with mutual state that handles 'inserted_tokens'
+        // * Rewrite format_leading / format_trailing to a single format_preceding_comments(token) that
+        //   formats all comments that preceed token (token.prev_token().trailing + tokne.leading_trivia()).
+        let result = format_elements![
+            format_leading_trivia(current_token, TriviaPrintMode::Full)?,
+            content_to_replace_with,
+            format_trailing_trivia(current_token),
+        ];
 
         formatter.track_token(current_token);
 
-        format_elements![
-            format_leading_trivia(current_token, TriviaPrintMode::Full),
-            content_to_replace_with,
-            format_trailing_trivia(current_token),
-        ]
+        Ok(result)
     }
 
     /// Prints a separated list of nodes
@@ -535,7 +460,7 @@ pub(crate) trait JsFormatter {
                         // Use format_replaced instead of wrapping the result of format_token
                         // in order to remove only the token itself when the group doesn't break
                         // but still print its associated trivias unconditionally
-                        self.format_replaced(separator, trailing_separator_factory())
+                        self.format_replaced(separator, trailing_separator_factory())?
                     } else if trailing_separator.is_mandatory() {
                         formatted![formatter, [separator.format()]]?
                     } else {
@@ -679,16 +604,8 @@ impl<'a, 'fmt> FormatDelimited<'a, 'fmt> {
         formatter.track_token(close_token);
 
         let open_token_trailing_trivia = format_trailing_trivia(open_token);
-        let close_token_leading_trivia = format_leading_trivia(close_token, TriviaPrintMode::Trim);
+        let close_token_leading_trivia = format_leading_trivia(close_token, TriviaPrintMode::Trim)?;
 
-        let open_token_trailing_trivia = if !open_token_trailing_trivia.is_empty() {
-            formatted![
-                formatter,
-                [open_token_trailing_trivia, soft_line_break_or_space()]
-            ]?
-        } else {
-            empty_element()
-        };
         let close_token_leading_trivia = if !close_token_leading_trivia.is_empty() {
             formatted![
                 formatter,

@@ -207,7 +207,7 @@ impl FormatRule<JsSyntaxToken> for FormatJsSyntaxToken {
         formatter.track_token(token);
 
         Ok(format_elements![
-            format_leading_trivia(token, formatter::TriviaPrintMode::Full),
+            format_leading_trivia(token, formatter::TriviaPrintMode::Full)?,
             Token::from(token),
             format_trailing_trivia(token),
         ])

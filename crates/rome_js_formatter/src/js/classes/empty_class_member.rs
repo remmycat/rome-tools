@@ -11,6 +11,6 @@ impl FormatNodeFields<JsEmptyClassMember> for FormatNodeRule<JsEmptyClassMember>
     ) -> FormatResult<FormatElement> {
         let JsEmptyClassMemberFields { semicolon_token } = node.as_fields();
 
-        Ok(formatter.format_replaced(&semicolon_token?, empty_element()))
+        formatter.format_replaced(&semicolon_token?, empty_element())
     }
 }

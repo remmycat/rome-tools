@@ -30,13 +30,13 @@ impl FormatNodeFields<JsParenthesizedExpression> for FormatNodeRule<JsParenthesi
                     if parenthesis_can_be_omitted {
                         formatter.format_replaced(&l_paren_token?, empty_element())
                     } else {
-                        formatted![formatter, [l_paren_token.format()]]?
+                        formatted![formatter, [l_paren_token.format()]]
                     },
                     expression.format(),
                     if parenthesis_can_be_omitted {
                         formatter.format_replaced(&r_paren_token?, empty_element())
                     } else {
-                        formatted![formatter, [r_paren_token.format()]]?
+                        formatted![formatter, [r_paren_token.format()]]
                     },
                 ]
             ]

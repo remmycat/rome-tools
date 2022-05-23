@@ -17,7 +17,7 @@ impl FormatNodeFields<JsDirective> for FormatNodeRule<JsDirective> {
 
         format_with_semicolon(
             formatter,
-            format_string_literal_token(value_token?, formatter),
+            format_string_literal_token(value_token?, formatter)?,
             semicolon_token,
         )
     }

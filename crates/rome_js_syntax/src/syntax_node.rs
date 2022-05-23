@@ -6,7 +6,8 @@
 //! This is a simple wrapper around the `rowan` crate which does most of the heavy lifting and is language agnostic.
 
 use crate::JsSyntaxKind;
-use rome_rowan::Language;
+use rome_rowan::syntax::CommentType;
+use rome_rowan::{Language, SyntaxTriviaPieceComments};
 #[cfg(feature = "serde")]
 use serde_crate::Serialize;
 
@@ -17,6 +18,14 @@ pub struct JsLanguage;
 
 impl Language for JsLanguage {
     type Kind = JsSyntaxKind;
+
+    fn get_comment_type(piece: &SyntaxTriviaPieceComments<Self>) -> CommentType {
+        if piece.text().trim().starts_with("/*") {
+            CommentType::Block
+        } else {
+            CommentType::Inline
+        }
+    }
 }
 
 pub type JsSyntaxNode = rome_rowan::SyntaxNode<JsLanguage>;

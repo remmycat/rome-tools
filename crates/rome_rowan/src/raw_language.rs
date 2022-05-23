@@ -1,8 +1,10 @@
 use crate::raw_language::RawLanguageKind::{COMMA_TOKEN, LITERAL_EXPRESSION};
+use crate::syntax::CommentType;
 ///! Provides a sample language implementation that is useful in API explanation or tests
 use crate::{
     AstNode, AstSeparatedList, Language, ParsedChildren, RawNodeSlots, RawSyntaxKind,
-    RawSyntaxNode, SyntaxFactory, SyntaxKind, SyntaxList, SyntaxNode, TreeBuilder,
+    RawSyntaxNode, SyntaxFactory, SyntaxKind, SyntaxList, SyntaxNode, SyntaxTriviaPieceComments,
+    TreeBuilder,
 };
 
 #[doc(hidden)]
@@ -11,6 +13,10 @@ pub struct RawLanguage;
 
 impl Language for RawLanguage {
     type Kind = RawLanguageKind;
+
+    fn get_comment_type(_: &SyntaxTriviaPieceComments<Self>) -> CommentType {
+        CommentType::Inline
+    }
 }
 
 #[doc(hidden)]

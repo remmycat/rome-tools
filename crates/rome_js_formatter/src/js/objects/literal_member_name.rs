@@ -15,7 +15,7 @@ impl FormatNodeFields<JsLiteralMemberName> for FormatNodeRule<JsLiteralMemberNam
         let value = value?;
 
         match value.kind() {
-            JsSyntaxKind::JS_STRING_LITERAL => Ok(format_string_literal_token(value, formatter)),
+            JsSyntaxKind::JS_STRING_LITERAL => format_string_literal_token(value, formatter),
             _ => formatted![formatter, [value.format()]],
         }
     }

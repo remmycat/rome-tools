@@ -35,11 +35,11 @@ pub(crate) use simple::*;
 pub(crate) fn format_type_member_separator(
     separator_token: Option<JsSyntaxToken>,
     formatter: &Formatter<JsFormatOptions>,
-) -> FormatElement {
+) -> FormatResult<FormatElement> {
     if let Some(separator) = separator_token {
         formatter.format_replaced(&separator, empty_element())
     } else {
-        empty_element()
+        Ok(empty_element())
     }
 }
 
@@ -150,14 +150,14 @@ pub(crate) fn format_template_chunk(
 ) -> FormatResult<FormatElement> {
     // Per https://tc39.es/ecma262/multipage/ecmascript-language-lexical-grammar.html#sec-static-semantics-trv:
     // In template literals, the '\r' and '\r\n' line terminators are normalized to '\n'
-    Ok(formatter.format_replaced(
+    formatter.format_replaced(
         &chunk,
         FormatElement::from(Token::from_syntax_token_cow_slice(
             normalize_newlines(chunk.text_trimmed(), ['\r']),
             &chunk,
             chunk.text_trimmed_range().start(),
         )),
-    ))
+    )
 }
 
 /// Function to format template literals and template literal types
@@ -377,7 +377,7 @@ pub(crate) fn format_with_semicolon(
 pub(crate) fn format_string_literal_token(
     token: JsSyntaxToken,
     formatter: &Formatter<JsFormatOptions>,
-) -> FormatElement {
+) -> FormatResult<FormatElement> {
     let quoted = token.text_trimmed();
     let (primary_quote_char, secondary_quote_char) = match formatter.options().quote_style {
         QuoteStyle::Double => ('"', '\''),

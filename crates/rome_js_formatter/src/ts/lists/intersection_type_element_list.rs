@@ -25,22 +25,22 @@ impl FormatRule<TsIntersectionTypeElementList> for FormatTsIntersectionTypeEleme
                         formatted![
                             formatter,
                             [soft_line_break_or_space(), token.format(), space_token()]
-                        ]?
+                        ]
                     }
                 }
                 None => {
                     if index == last_index {
-                        empty_element()
+                        Ok(empty_element())
                     } else {
                         formatted![
                             formatter,
                             [soft_line_break_or_space(), token("&"), space_token()]
-                        ]?
+                        ]
                     }
                 }
             };
 
-            elements.push(format_elements![group_elements(ty), separator]);
+            elements.push(formatted![formatter, [group_elements(ty), separator]]?);
         }
 
         Ok(concat_elements(elements))

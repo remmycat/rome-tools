@@ -25,20 +25,20 @@ impl FormatRule<TsUnionTypeVariantList> for FormatTsUnionTypeVariantList {
                         formatted![
                             formatter,
                             [soft_line_break_or_space(), token.format(), space_token()]
-                        ]?
+                        ]
                     }
                 }
                 None => {
                     if index == last_index {
-                        empty_element()
+                        Ok(empty_element())
                     } else {
                         formatted![
                             formatter,
                             [soft_line_break_or_space(), token("|"), space_token()]
-                        ]?
+                        ]
                     }
                 }
-            };
+            }?;
 
             elements.push(format_elements![group_elements(ty), separator]);
         }

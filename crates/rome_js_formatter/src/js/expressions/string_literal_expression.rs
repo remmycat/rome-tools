@@ -20,7 +20,7 @@ impl FormatNodeFields<JsStringLiteralExpression> for FormatNodeRule<JsStringLite
 
         let needs_parenthesis = parent.and_then(JsExpressionStatement::cast).is_some();
 
-        let formatted_element = format_string_literal_token(value_token, formatter);
+        let formatted_element = format_string_literal_token(value_token, formatter)?;
         if needs_parenthesis {
             let (leading_trivia, content, trailing_trivia) = formatted_element.split_trivia();
             Ok(format_elements![

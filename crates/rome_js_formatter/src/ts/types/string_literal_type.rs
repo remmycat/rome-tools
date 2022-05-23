@@ -10,6 +10,6 @@ impl FormatNodeFields<TsStringLiteralType> for FormatNodeRule<TsStringLiteralTyp
     ) -> FormatResult<FormatElement> {
         let TsStringLiteralTypeFields { literal_token } = node.as_fields();
 
-        Ok(format_string_literal_token(literal_token?, formatter))
+        format_string_literal_token(literal_token?, formatter)
     }
 }

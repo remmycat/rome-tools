@@ -39,6 +39,13 @@ pub trait SyntaxKind: fmt::Debug + PartialEq + Copy {
 
 pub trait Language: Sized + Clone + Copy + fmt::Debug + Eq + Ord + std::hash::Hash {
     type Kind: SyntaxKind;
+
+    fn get_comment_type(piece: &SyntaxTriviaPieceComments<Self>) -> CommentType;
+}
+
+pub enum CommentType {
+    Inline,
+    Block,
 }
 
 /// A list of `SyntaxNode`s and/or `SyntaxToken`s
