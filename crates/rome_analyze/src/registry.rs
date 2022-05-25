@@ -8,7 +8,7 @@ use crate::{
     assists::*,
     categories::{ActionCategory, RuleCategory},
     signals::{AnalyzerSignal, RuleSignal},
-    AnalysisFilter,
+    AnalysisFilter, ControlFlow,
 };
 
 /// The rule registry holds type-erased instances of all active analysis rules
@@ -45,18 +45,22 @@ impl_registry_builders!(
 
 impl RuleRegistry {
     // Run all rules known to the registry associated with nodes of type N
-    pub(crate) fn analyze(
+    pub(crate) fn analyze<B>(
         &self,
         file_id: FileId,
         root: &JsAnyRoot,
         node: JsSyntaxNode,
-        callback: &mut impl FnMut(&dyn AnalyzerSignal),
-    ) {
+        callback: &mut impl FnMut(&dyn AnalyzerSignal) -> ControlFlow<B>,
+    ) -> ControlFlow<B> {
         for rule in &self.rules {
             if let Some(event) = (rule)(file_id, root, &node) {
-                callback(&*event);
+                if let ControlFlow::Break(b) = callback(&*event) {
+                    return ControlFlow::Break(b);
+                }
             }
         }
+
+        ControlFlow::Continue(())
     }
 }
 
