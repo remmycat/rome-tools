@@ -6,7 +6,7 @@ use std::borrow::Cow;
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Deref;
 
-type Content = Box<FormatElement>;
+type Content = Box<[FormatElement]>;
 
 /// Language agnostic IR for formatting source code.
 ///
@@ -41,7 +41,7 @@ pub enum FormatElement {
 
     /// Concatenates multiple elements together with a given separator printed in either
     /// flat or expanded mode to fill the print width. See [fill_elements].
-    Fill(Box<Fill>),
+    Fill(Fill),
 
     /// A token that should be printed as is, see [token] for documentation and examples.
     Token(Token),
@@ -83,27 +83,27 @@ pub struct Verbatim {
     /// The reason this range is using verbatim formatting
     pub kind: VerbatimKind,
     /// The [FormatElement] version of the node/token
-    pub element: Box<FormatElement>,
+    pub content: Box<[FormatElement]>,
 }
 
 impl Verbatim {
-    pub fn new_verbatim(element: FormatElement, length: TextSize) -> Self {
+    pub fn new_verbatim(content: Box<[FormatElement]>, length: TextSize) -> Self {
         Self {
-            element: Box::new(element),
+            content,
             kind: VerbatimKind::Verbatim { length },
         }
     }
 
-    pub fn new_unknown(element: FormatElement) -> Self {
+    pub fn new_unknown(content: Box<[FormatElement]>) -> Self {
         Self {
-            element: Box::new(element),
+            content,
             kind: VerbatimKind::Unknown,
         }
     }
 
-    pub fn new_suppressed(element: FormatElement) -> Self {
+    pub fn new_suppressed(content: Box<[FormatElement]>) -> Self {
         Self {
-            element: Box::new(element),
+            content,
             kind: VerbatimKind::Suppressed,
         }
     }
@@ -137,7 +137,7 @@ impl Debug for FormatElement {
             FormatElement::Comment(content) => fmt.debug_tuple("Comment").field(content).finish(),
             FormatElement::Verbatim(verbatim) => fmt
                 .debug_tuple("Verbatim")
-                .field(&verbatim.element)
+                .field(&verbatim.content)
                 .finish(),
             FormatElement::BestFitting(best_fitting) => {
                 write!(fmt, "BestFitting")?;
@@ -180,6 +180,42 @@ impl List {
     pub(crate) fn into_vec(self) -> Vec<FormatElement> {
         self.content
     }
+
+    pub(crate) fn split_trivia(mut self) -> (List, List, List) {
+        // Find the index of the first non-comment element in the list
+        let content_start = self
+            .content
+            .iter()
+            .position(|elem| !matches!(elem, FormatElement::Comment(_)));
+
+        // List contains at least one non trivia element.
+        if let Some(content_start) = content_start {
+            let (leading, mut content) = if content_start > 0 {
+                let content = self.content.split_off(content_start);
+                (self.content, content)
+            } else {
+                // No leading trivia
+                (Vec::default(), self.content)
+            };
+
+            let content_end = content
+                .iter()
+                .rposition(|elem| !matches!(elem, FormatElement::Comment(_)))
+                .expect("List guaranteed to contain at least one non trivia element.");
+            let trailing_start = content_end + 1;
+
+            let trailing = if trailing_start < content.len() {
+                List::new(content.split_off(trailing_start))
+            } else {
+                List::default()
+            };
+
+            (List::new(leading), List::new(content), trailing)
+        } else {
+            // All leading trivia
+            (self, List::default(), List::default())
+        }
+    }
 }
 
 impl Deref for List {
@@ -196,13 +232,13 @@ impl Deref for List {
 /// reaches the specified `line_width`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Fill {
-    pub(super) list: List,
-    pub(super) separator: FormatElement,
+    pub(super) content: Content,
+    pub(super) separator: Box<FormatElement>,
 }
 
 impl Fill {
-    pub fn list(&self) -> &List {
-        &self.list
+    pub fn content(&self) -> &[FormatElement] {
+        &self.content
     }
 
     pub fn separator(&self) -> &FormatElement {
@@ -234,11 +270,8 @@ impl Debug for Group {
 }
 
 impl Group {
-    pub fn new(content: FormatElement) -> Self {
-        Self {
-            content: Box::new(content),
-            id: None,
-        }
+    pub fn new(content: Box<[FormatElement]>) -> Self {
+        Self { content, id: None }
     }
 
     pub fn with_id(mut self, id: Option<GroupId>) -> Self {
@@ -338,9 +371,9 @@ pub struct ConditionalGroupContent {
 }
 
 impl ConditionalGroupContent {
-    pub fn new(content: FormatElement, mode: PrintMode) -> Self {
+    pub fn new(content: Box<[FormatElement]>, mode: PrintMode) -> Self {
         Self {
-            content: Box::new(content),
+            content,
             mode,
             group_id: None,
         }
@@ -479,15 +512,15 @@ impl FormatElement {
         match self {
             FormatElement::Space => false,
             FormatElement::Line(line_mode) => matches!(line_mode, LineMode::Hard | LineMode::Empty),
-            FormatElement::Indent(content) => content.will_break(),
-            FormatElement::Group(group) => group.content.will_break(),
-            FormatElement::ConditionalGroupContent(group) => group.content.will_break(),
+            FormatElement::Indent(content)
+            | FormatElement::Group(Group { content, .. })
+            | FormatElement::Fill(Fill { content, .. })
+            | FormatElement::ConditionalGroupContent(ConditionalGroupContent { content, .. })
+            | FormatElement::Verbatim(Verbatim { content, .. })
+            | FormatElement::Comment(content) => content.iter().any(FormatElement::will_break),
             FormatElement::List(list) => list.content.iter().any(FormatElement::will_break),
-            FormatElement::Fill(fill) => fill.list.content.iter().any(FormatElement::will_break),
             FormatElement::Token(token) => token.contains('\n'),
             FormatElement::LineSuffix(_) => false,
-            FormatElement::Comment(content) => content.will_break(),
-            FormatElement::Verbatim(verbatim) => verbatim.element.will_break(),
             FormatElement::BestFitting(_) => false,
             FormatElement::LineSuffixBoundary => false,
             FormatElement::ExpandParent => true,
@@ -501,44 +534,14 @@ impl FormatElement {
     /// content itself.
     pub fn split_trivia(self) -> (FormatElement, FormatElement, FormatElement) {
         match self {
-            FormatElement::List(mut list) => {
-                // Find the index of the first non-comment element in the list
-                let content_start = list
-                    .content
-                    .iter()
-                    .position(|elem| !matches!(elem, FormatElement::Comment(_)));
+            FormatElement::List(list) => {
+                let (leading, content, trailing) = list.split_trivia();
 
-                // List contains at least one non trivia element.
-                if let Some(content_start) = content_start {
-                    let (leading, mut content) = if content_start > 0 {
-                        let content = list.content.split_off(content_start);
-                        (FormatElement::List(list), content)
-                    } else {
-                        // No leading trivia
-                        (FormatElement::List(List::default()), list.content)
-                    };
-
-                    let content_end = content
-                        .iter()
-                        .rposition(|elem| !matches!(elem, FormatElement::Comment(_)))
-                        .expect("List guaranteed to contain at least one non trivia element.");
-                    let trailing_start = content_end + 1;
-
-                    let trailing = if trailing_start < content.len() {
-                        FormatElement::List(List::new(content.split_off(trailing_start)))
-                    } else {
-                        FormatElement::List(List::default())
-                    };
-
-                    (leading, FormatElement::List(List::new(content)), trailing)
-                } else {
-                    // All leading trivia
-                    (
-                        FormatElement::List(list),
-                        FormatElement::List(List::default()),
-                        FormatElement::List(List::default()),
-                    )
-                }
+                (
+                    FormatElement::List(leading),
+                    FormatElement::List(content),
+                    FormatElement::List(trailing),
+                )
             }
             // Non-list elements are returned directly
             _ => (
@@ -554,18 +557,16 @@ impl FormatElement {
     /// a line break or a comment
     pub fn last_element(&self) -> Option<&FormatElement> {
         match self {
-            FormatElement::Fill(fill) => fill
-                .list
-                .iter()
-                .rev()
-                .find_map(|element| element.last_element()),
             FormatElement::List(list) => {
                 list.iter().rev().find_map(|element| element.last_element())
             }
             FormatElement::Line(_) | FormatElement::Comment(_) => None,
 
-            FormatElement::Indent(indent) => indent.last_element(),
-            FormatElement::Group(group) => group.content.last_element(),
+            FormatElement::Indent(content)
+            | FormatElement::Group(Group { content, .. })
+            | FormatElement::Fill(Fill { content, .. }) => {
+                content.iter().rev().find_map(|e| e.last_element())
+            }
 
             _ => Some(self),
         }
@@ -637,14 +638,14 @@ static_assert!(std::mem::size_of::<rome_rowan::TextRange>() == 8usize);
 static_assert!(std::mem::size_of::<crate::format_element::VerbatimKind>() == 8usize);
 
 #[cfg(target_pointer_width = "64")]
-static_assert!(std::mem::size_of::<crate::format_element::Verbatim>() == 16usize);
+static_assert!(std::mem::size_of::<crate::format_element::Verbatim>() == 24usize);
 
 #[cfg(target_pointer_width = "64")]
 static_assert!(std::mem::size_of::<crate::format_element::Token>() == 24usize);
 
 #[cfg(not(debug_assertions))]
 #[cfg(target_pointer_width = "64")]
-static_assert!(std::mem::size_of::<crate::format_element::ConditionalGroupContent>() == 16usize);
+static_assert!(std::mem::size_of::<crate::format_element::ConditionalGroupContent>() == 24usize);
 
 #[cfg(target_pointer_width = "64")]
 static_assert!(std::mem::size_of::<crate::format_element::List>() == 24usize);

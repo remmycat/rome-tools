@@ -422,8 +422,8 @@ where
         let mut buffer = VecBuffer::new(f.state_mut());
         write!(buffer, [&self.content])?;
 
-        let content = buffer.into_element();
-        f.write_element(FormatElement::LineSuffix(Box::new(content)))
+        let content = buffer.into_vec();
+        f.write_element(FormatElement::LineSuffix(content.into_boxed_slice()))
     }
 }
 
@@ -518,9 +518,9 @@ where
         let mut buffer = VecBuffer::new(f.state_mut());
 
         write!(buffer, [&self.content])?;
-        let content = buffer.into_element();
+        let content = buffer.into_vec();
 
-        f.write_element(FormatElement::Comment(Box::new(content)))
+        f.write_element(FormatElement::Comment(content.into_boxed_slice()))
     }
 }
 
@@ -615,8 +615,8 @@ where
             return Ok(());
         }
 
-        let content = buffer.into_element();
-        f.write_element(FormatElement::Indent(Box::new(content)))
+        let content = buffer.into_vec();
+        f.write_element(FormatElement::Indent(content.into_boxed_slice()))
     }
 }
 
@@ -834,9 +834,9 @@ where
             return Ok(());
         }
 
-        let content = buffer.into_element();
+        let content = buffer.into_vec();
 
-        f.write_element(FormatElement::Indent(Box::new(content)))?;
+        f.write_element(FormatElement::Indent(content.into_boxed_slice()))?;
 
         match self.mode {
             IndentMode::Soft => write!(f, [soft_line_break()])?,
@@ -971,18 +971,19 @@ where
 
         write!(buffer, [self.content])?;
 
-        let content = buffer.into_element();
+        let content = List::new(buffer.into_vec());
 
         let (leading, content, trailing) = content.split_trivia();
-        let group = Group::new(content).with_id(self.options.group_id);
+        let group =
+            Group::new(content.into_vec().into_boxed_slice()).with_id(self.options.group_id);
 
         if !leading.is_empty() {
-            f.write_element(leading)?;
+            f.write_element(leading.into())?;
         }
         f.write_element(FormatElement::Group(group))?;
 
         if !trailing.is_empty() {
-            f.write_element(trailing)?;
+            f.write_element(trailing.into())?;
         }
 
         Ok(())
@@ -1279,9 +1280,10 @@ where
             return Ok(());
         }
 
-        let content = buffer.into_element();
+        let content = buffer.into_vec();
         f.write_element(FormatElement::ConditionalGroupContent(
-            ConditionalGroupContent::new(content, self.mode).with_group_id(self.group_id),
+            ConditionalGroupContent::new(content.into_boxed_slice(), self.mode)
+                .with_group_id(self.group_id),
         ))
     }
 }
@@ -1676,13 +1678,10 @@ impl<'a, 'buf, Context> FillBuilder<'a, 'buf, Context> {
             match items.len() {
                 0 => Ok(()),
                 1 => self.fmt.write_element(items.pop().unwrap()),
-                _ => self.fmt.write_element(FormatElement::Fill(Box::new(Fill {
-                    list: List::new(items),
-                    separator: std::mem::replace(
-                        &mut self.separator,
-                        FormatElement::List(List::default()),
-                    ),
-                }))),
+                _ => self.fmt.write_element(FormatElement::Fill(Fill {
+                    content: items.into_boxed_slice(),
+                    separator: Box::new(self.separator.clone()),
+                })),
             }
         })
     }
