@@ -37,6 +37,7 @@ impl_registry_builders!(
     // Analyzers
     NoDelete,
     NoDoubleEquals,
+    UseSingleCaseStatement,
     UseSingleVarDeclarator,
     UseWhile,
     // Assists
