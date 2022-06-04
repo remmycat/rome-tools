@@ -221,7 +221,7 @@ impl HeadGroup {
 }
 
 impl Format<JsFormatContext> for HeadGroup {
-    fn format(&self, f: &mut Formatter<JsFormatContext>) -> FormatResult<()> {
+    fn fmt(&self, f: &mut Formatter<JsFormatContext>) -> FormatResult<()> {
         f.join().entries(self.items.iter()).finish()
     }
 }

@@ -8,7 +8,7 @@ use rome_js_syntax::{JsAnyExpression, JsUnaryExpression};
 use rome_js_syntax::{JsUnaryExpressionFields, JsUnaryOperator};
 
 impl FormatNodeFields<JsUnaryExpression> for FormatNodeRule<JsUnaryExpression> {
-    fn format_fields(node: &JsUnaryExpression, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsUnaryExpression, f: &mut JsFormatter) -> FormatResult<()> {
         let JsUnaryExpressionFields {
             operator_token,
             argument,
@@ -69,9 +69,9 @@ impl FormatNodeFields<JsUnaryExpression> for FormatNodeRule<JsUnaryExpression> {
                     f,
                     [
                         operator_token.format(),
-                        group_elements(format_args![
+                        group_elements(&format_args![
                             token("("),
-                            soft_block_indent(argument.format()),
+                            soft_block_indent(&argument.format()),
                             token(")"),
                         ]),
                     ]

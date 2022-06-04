@@ -181,12 +181,12 @@ where
 {
     type Context = JsFormatContext;
 
-    fn format(node: &N, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt(node: &N, f: &mut JsFormatter) -> FormatResult<()> {
         let syntax = node.syntax();
         if has_formatter_suppressions(syntax) {
             write!(f, [format_suppressed_node(syntax)])?;
         } else {
-            Self::format_fields(node, f)?;
+            Self::fmt_fields(node, f)?;
         };
 
         Ok(())
@@ -198,7 +198,7 @@ where
     T: AstNode<Language = JsLanguage>,
 {
     /// Formats the node's fields.
-    fn format_fields(item: &T, f: &mut JsFormatter) -> FormatResult<()>;
+    fn fmt_fields(item: &T, f: &mut JsFormatter) -> FormatResult<()>;
 }
 
 /// Format implementation specific to JavaScript tokens.
@@ -207,7 +207,7 @@ pub struct FormatJsSyntaxToken;
 impl FormatRule<JsSyntaxToken> for FormatJsSyntaxToken {
     type Context = JsFormatContext;
 
-    fn format(token: &JsSyntaxToken, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt(token: &JsSyntaxToken, f: &mut JsFormatter) -> FormatResult<()> {
         f.state_mut().track_token(token);
 
         write!(
@@ -485,11 +485,11 @@ mod test {
     use rome_js_parser::parse;
     use rome_js_syntax::SourceType;
 
-    #[test]
     #[ignore]
+    #[test]
     // use this test check if your snippet prints as you wish, without using a snapshot
     fn quick_test() {
-        let src = r#"one.two.tree"#;
+        let src = r#"if (true) {}"#;
         let syntax = SourceType::tsx();
         let tree = parse(src, 0, syntax);
         let result = format_node(JsFormatContext::default(), &tree.syntax())

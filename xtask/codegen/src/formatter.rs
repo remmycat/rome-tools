@@ -311,7 +311,7 @@ pub fn generate_formatter() {
                 impl FormatRule<#node_id> for #format_id {
                     type Context = JsFormatContext;
 
-                    fn format(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
+                    fn fmt(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
                         f.join().entries(node.iter().formatted()).finish()
                     }
                 }
@@ -324,8 +324,8 @@ pub fn generate_formatter() {
                 impl FormatRule<#node_id> for #format_id {
                     type Context = JsFormatContext;
 
-                    fn format(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
-                        format_verbatim_node(node.syntax()).format(f)
+                    fn fmt(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
+                        format_verbatim_node(node.syntax()).fmt(f)
                     }
                 }
             },
@@ -337,8 +337,8 @@ pub fn generate_formatter() {
                     use rome_js_syntax::#node_id;
 
                     impl FormatNodeFields<#node_id> for FormatNodeRule<#node_id> {
-                        fn format_fields(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
-                            format_verbatim_node(node.syntax()).format(f)
+                        fn fmt_fields(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
+                            format_verbatim_node(node.syntax()).fmt(f)
                         }
                     }
                 }
@@ -351,8 +351,8 @@ pub fn generate_formatter() {
                     use rome_js_syntax::#node_id;
 
                     impl FormatNodeFields<#node_id> for FormatNodeRule<#node_id> {
-                        fn format_fields(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
-                            format_unknown_node(node.syntax()).format(f)
+                        fn fmt_fields(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
+                            format_unknown_node(node.syntax()).fmt(f)
                         }
                     }
                 }
@@ -363,7 +363,7 @@ pub fn generate_formatter() {
                     .into_iter()
                     .map(|variant| {
                         let variant = Ident::new(&variant, Span::call_site());
-                        quote! { #node_id::#variant(node) => node.format().format(f), }
+                        quote! { #node_id::#variant(node) => node.format().fmt(f), }
                     })
                     .collect();
 
@@ -375,7 +375,7 @@ pub fn generate_formatter() {
                     impl FormatRule<#node_id> for #format_id {
                         type Context = JsFormatContext;
 
-                        fn format(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
+                        fn fmt(node: &#node_id, f: &mut JsFormatter) -> FormatResult<()> {
                             match node {
                                 #( #match_arms )*
                             }

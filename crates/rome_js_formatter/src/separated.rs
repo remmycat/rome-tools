@@ -22,11 +22,11 @@ where
     for<'a> N: AstNode<Language = JsLanguage> + AsFormat<'a>,
     Separator: Format<JsFormatContext>,
 {
-    fn format(&self, f: &mut Formatter<JsFormatContext>) -> FormatResult<()> {
+    fn fmt(&self, f: &mut Formatter<JsFormatContext>) -> FormatResult<()> {
         let node = self.element.node()?;
         let separator = self.element.trailing_separator()?;
 
-        write!(f, [group_elements(node.format())])?;
+        write!(f, [group_elements(&node.format())])?;
 
         let format_trailing_separator =
             if_group_breaks(&self.separator).with_group_id(self.options.group_id);

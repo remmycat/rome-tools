@@ -43,7 +43,7 @@ use crate::prelude::syntax_token_cow_slice;
 use crate::printed_tokens::PrintedTokens;
 use crate::printer::{Printer, PrinterOptions};
 pub use arguments::{Argument, Arguments};
-pub use buffer::{Buffer, BufferSnapshot, PreambleBuffer, VecBuffer};
+pub use buffer::{Buffer, BufferExtensions, BufferSnapshot, Inspect, PreambleBuffer, VecBuffer};
 pub use builders::{
     block_indent, comment, empty_element, empty_line, group_elements, hard_line_break,
     if_group_breaks, if_group_fits_on_line, indent, line_suffix, soft_block_indent,
@@ -232,7 +232,7 @@ impl Formatted {
         Printer::new(self.options.clone()).print(&self.root)
     }
 
-    pub fn print_with_indent(self, indent: u16) -> Printed {
+    pub fn print_with_indent(&self, indent: u16) -> Printed {
         Printer::new(self.options.clone()).print_with_indent(&self.root, indent)
     }
 
@@ -371,7 +371,7 @@ impl From<&SyntaxError> for FormatError {
 /// struct Paragraph(String);
 ///
 /// impl Format<SimpleFormatContext> for Paragraph {
-///     fn format(&self, f: &mut Formatter<SimpleFormatContext>) -> FormatResult<()> {
+///     fn fmt(&self, f: &mut Formatter<SimpleFormatContext>) -> FormatResult<()> {
 ///         write!(f, [
 ///             hard_line_break(),
 ///             dynamic_token(&self.0, TextSize::from(0)),
@@ -386,16 +386,16 @@ impl From<&SyntaxError> for FormatError {
 /// assert_eq!("test\n", formatted.print().as_code())
 /// ```
 pub trait Format<Context> {
-    /// Formats the object
-    fn format(&self, f: &mut Formatter<Context>) -> FormatResult<()>;
+    /// Formats the object using the given formatter.
+    fn fmt(&self, f: &mut Formatter<Context>) -> FormatResult<()>;
 }
 
 impl<T, Context> Format<Context> for &T
 where
     T: ?Sized + Format<Context>,
 {
-    fn format(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
-        Format::format(&**self, f)
+    fn fmt(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
+        Format::fmt(&**self, f)
     }
 }
 
@@ -403,8 +403,8 @@ impl<T, Context> Format<Context> for &mut T
 where
     T: ?Sized + Format<Context>,
 {
-    fn format(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
-        Format::format(&**self, f)
+    fn fmt(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
+        Format::fmt(&**self, f)
     }
 }
 
@@ -412,9 +412,9 @@ impl<T, Context> Format<Context> for Option<T>
 where
     T: Format<Context>,
 {
-    fn format(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
+    fn fmt(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
         match self {
-            Some(value) => value.format(f),
+            Some(value) => value.fmt(f),
             None => Ok(()),
         }
     }
@@ -424,9 +424,9 @@ impl<T, Context> Format<Context> for SyntaxResult<T>
 where
     T: Format<Context>,
 {
-    fn format(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
+    fn fmt(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
         match self {
-            Ok(value) => value.format(f),
+            Ok(value) => value.fmt(f),
             Err(err) => Err(err.into()),
         }
     }
@@ -434,7 +434,7 @@ where
 
 impl<Context> Format<Context> for () {
     #[inline]
-    fn format(&self, _: &mut Formatter<Context>) -> FormatResult<()> {
+    fn fmt(&self, _: &mut Formatter<Context>) -> FormatResult<()> {
         // Intentionally left empty
         Ok(())
     }
@@ -453,7 +453,7 @@ impl<Context> Format<Context> for () {
 pub trait FormatRule<T> {
     type Context;
 
-    fn format(item: &T, f: &mut Formatter<Self::Context>) -> FormatResult<()>;
+    fn fmt(item: &T, f: &mut Formatter<Self::Context>) -> FormatResult<()>;
 }
 
 /// Trait for an object that formats an object with a specified rule.
@@ -525,8 +525,8 @@ where
     R: FormatRule<T>,
 {
     #[inline]
-    fn format(&self, f: &mut Formatter<R::Context>) -> FormatResult<()> {
-        R::format(self.item, f)
+    fn fmt(&self, f: &mut Formatter<R::Context>) -> FormatResult<()> {
+        R::fmt(self.item, f)
     }
 }
 
@@ -565,8 +565,8 @@ where
     R: FormatRule<T>,
 {
     #[inline]
-    fn format(&self, f: &mut Formatter<R::Context>) -> FormatResult<()> {
-        R::format(&self.item, f)
+    fn fmt(&self, f: &mut Formatter<R::Context>) -> FormatResult<()> {
+        R::fmt(&self.item, f)
     }
 }
 
@@ -651,13 +651,13 @@ pub fn write<Context>(
 /// let formatted = format!(SimpleFormatContext::default(), [token("test")]).unwrap();
 /// assert_eq!("test", formatted.print().as_code());
 /// ```
-pub fn format<Context>(options: Context, arguments: Arguments<Context>) -> FormatResult<Formatted>
+pub fn format<Context>(context: Context, arguments: Arguments<Context>) -> FormatResult<Formatted>
 where
     Context: FormatContext,
 {
-    let print_options = options.as_print_options();
-    let mut context = FormatState::new(options);
-    let mut buffer = VecBuffer::with_capacity(arguments.items().len(), &mut context);
+    let print_options = context.as_print_options();
+    let mut state = FormatState::new(context);
+    let mut buffer = VecBuffer::with_capacity(arguments.items().len(), &mut state);
 
     buffer.write_fmt(arguments)?;
 
@@ -749,7 +749,7 @@ where
 /// It returns a [Formatted] result with a range corresponding to the
 /// range of the input that was effectively overwritten by the formatter
 pub fn format_range<Context, L, R, P>(
-    options: Context,
+    context: Context,
     root: &SyntaxNode<L>,
     mut range: TextRange,
     mut predicate: P,
@@ -899,7 +899,7 @@ where
 
     // Perform the actual formatting of the root node with
     // an appropriate indentation level
-    let formatted = format_sub_tree(options, &FormatRefWithRule::<_, R>::new(common_root))?;
+    let formatted = format_sub_tree(context, &FormatRefWithRule::<_, R>::new(common_root))?;
 
     // This finds the closest marker to the beginning of the source
     // starting before or at said starting point, and the closest
@@ -1048,7 +1048,7 @@ pub fn format_sub_tree<
 }
 
 impl<L: Language, Context> Format<Context> for SyntaxTriviaPieceComments<L> {
-    fn format(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
+    fn fmt(&self, f: &mut Formatter<Context>) -> FormatResult<()> {
         let range = self.text_range();
 
         write!(
@@ -1082,8 +1082,8 @@ where
     Context: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("FormatContext")
-            .field("options", &self.context)
+        f.debug_struct("FormatState")
+            .field("context", &self.context)
             .finish()
     }
 }

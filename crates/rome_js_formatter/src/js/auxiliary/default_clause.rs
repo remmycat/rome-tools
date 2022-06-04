@@ -6,7 +6,7 @@ use rome_js_syntax::{JsAnyStatement, JsDefaultClauseFields};
 use rome_rowan::AstNodeList;
 
 impl FormatNodeFields<JsDefaultClause> for FormatNodeRule<JsDefaultClause> {
-    fn format_fields(node: &JsDefaultClause, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsDefaultClause, f: &mut JsFormatter) -> FormatResult<()> {
         let JsDefaultClauseFields {
             default_token,
             colon_token,
@@ -40,7 +40,7 @@ impl FormatNodeFields<JsDefaultClause> for FormatNodeRule<JsDefaultClause> {
             // no line break needed after because it is added by the indent in the switch statement
             write!(
                 f,
-                [indent(format_args!(hard_line_break(), format_statements))]
+                [indent(&format_args!(hard_line_break(), format_statements))]
             )
         }
     }

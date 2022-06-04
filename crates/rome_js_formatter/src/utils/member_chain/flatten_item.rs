@@ -140,7 +140,7 @@ impl FlattenItem {
 }
 
 impl Format<JsFormatContext> for FlattenItem {
-    fn format(&self, f: &mut Formatter<JsFormatContext>) -> FormatResult<()> {
+    fn fmt(&self, f: &mut Formatter<JsFormatContext>) -> FormatResult<()> {
         match self {
             FlattenItem::StaticMember(static_member) => {
                 write![

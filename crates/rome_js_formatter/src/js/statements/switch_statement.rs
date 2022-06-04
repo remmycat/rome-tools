@@ -5,7 +5,7 @@ use rome_js_syntax::{JsSwitchStatement, JsSwitchStatementFields};
 use rome_rowan::{AstNode, AstNodeList};
 
 impl FormatNodeFields<JsSwitchStatement> for FormatNodeRule<JsSwitchStatement> {
-    fn format_fields(node: &JsSwitchStatement, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsSwitchStatement, f: &mut JsFormatter) -> FormatResult<()> {
         let JsSwitchStatementFields {
             switch_token,
             l_paren_token,
@@ -16,13 +16,13 @@ impl FormatNodeFields<JsSwitchStatement> for FormatNodeRule<JsSwitchStatement> {
             r_curly_token,
         } = node.as_fields();
 
-        let format_cases = format_once(|f| {
+        let format_cases = format_with(|f| {
             if cases.is_empty() {
                 write!(f, [hard_line_break()])?;
             } else {
                 let mut join = f.join_nodes_with_hardline();
 
-                for case in cases {
+                for case in &cases {
                     join.entry(case.syntax(), &case.format());
                 }
 
