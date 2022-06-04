@@ -6,7 +6,7 @@ use rome_js_syntax::{
 };
 
 impl FormatNodeFields<JsxExpressionAttributeValue> for FormatNodeRule<JsxExpressionAttributeValue> {
-    fn format_fields(node: &JsxExpressionAttributeValue, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsxExpressionAttributeValue, f: &mut JsFormatter) -> FormatResult<()> {
         let JsxExpressionAttributeValueFields {
             l_curly_token,
             expression,
@@ -15,7 +15,7 @@ impl FormatNodeFields<JsxExpressionAttributeValue> for FormatNodeRule<JsxExpress
 
         write!(
             f,
-            [group_elements(format_with(|f| {
+            [group_elements(&format_with(|f| {
                 write!(f, [l_curly_token.format()])?;
 
                 let expression = expression.as_ref()?;
@@ -59,7 +59,7 @@ impl FormatNodeFields<JsxExpressionAttributeValue> for FormatNodeRule<JsxExpress
                 ) {
                     write!(f, [expression.format()])?;
                 } else {
-                    write!(f, [soft_block_indent(expression.format())])?;
+                    write!(f, [soft_block_indent(&expression.format())])?;
                 };
 
                 write!(f, [line_suffix_boundary(), r_curly_token.format()])

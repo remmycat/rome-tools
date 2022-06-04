@@ -7,10 +7,10 @@ use rome_rowan::AstNode;
 impl FormatNodeFields<JsUnknownNamedImportSpecifier>
     for FormatNodeRule<JsUnknownNamedImportSpecifier>
 {
-    fn format_fields(
+    fn fmt_fields(
         node: &JsUnknownNamedImportSpecifier,
         formatter: &mut JsFormatter,
     ) -> FormatResult<()> {
-        format_unknown_node(node.syntax()).format(formatter)
+        format_unknown_node(node.syntax()).fmt(formatter)
     }
 }

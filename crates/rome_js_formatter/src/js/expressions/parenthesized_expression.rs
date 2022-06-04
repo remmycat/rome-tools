@@ -10,7 +10,7 @@ use rome_js_syntax::{
 use rome_rowan::{AstNode, SyntaxResult};
 
 impl FormatNodeFields<JsParenthesizedExpression> for FormatNodeRule<JsParenthesizedExpression> {
-    fn format_fields(node: &JsParenthesizedExpression, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsParenthesizedExpression, f: &mut JsFormatter) -> FormatResult<()> {
         let JsParenthesizedExpressionFields {
             l_paren_token,
             expression,
@@ -41,7 +41,7 @@ impl FormatNodeFields<JsParenthesizedExpression> for FormatNodeRule<JsParenthesi
                 f,
                 [
                     format_replaced(&l_paren_token?, &empty_element()),
-                    group_elements(expression.format()),
+                    group_elements(&expression.format()),
                     format_replaced(&r_paren_token?, &empty_element()),
                 ]
             ]?;

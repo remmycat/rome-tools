@@ -5,7 +5,7 @@ use crate::prelude::*;
 use crate::printed_tokens::PrintedTokens;
 use crate::{Arguments, Buffer, FormatState, GroupId};
 
-/// Handles the formatting of a CST and stores the options how the CST should be formatted (user preferences).
+/// Handles the formatting of a CST and stores the context how the CST should be formatted (user preferences).
 /// The formatter is passed to the [Format] implementation of every node in the CST so that they
 /// can use it to format their children.
 pub struct Formatter<'buf, Context> {
@@ -68,7 +68,7 @@ impl<'buf, Context> Formatter<'buf, Context> {
     /// use rome_formatter::prelude::*;
     ///
     /// let formatted = format!(SimpleFormatContext::default(), [format_with(|f| {
-    ///     f.join_with(format_args!(token(","), space_token()))
+    ///     f.join_with(&format_args!(token(","), space_token()))
     ///         .entry(&token("1"))
     ///         .entry(&token("2"))
     ///         .entry(&token("3"))
@@ -88,7 +88,7 @@ impl<'buf, Context> Formatter<'buf, Context> {
     where
         Joiner: Format<Context>,
     {
-        JoinBuilder::with(self, joiner)
+        JoinBuilder::with_separator(self, joiner)
     }
 
     /// Specialized version of [join_with] for joining SyntaxNodes separated by a space, soft

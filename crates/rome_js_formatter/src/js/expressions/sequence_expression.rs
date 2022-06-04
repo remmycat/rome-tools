@@ -6,7 +6,7 @@ use rome_js_syntax::{JsSequenceExpression, JsSequenceExpressionFields, JsSyntaxK
 use rome_rowan::AstNode;
 
 impl FormatNodeFields<JsSequenceExpression> for FormatNodeRule<JsSequenceExpression> {
-    fn format_fields(node: &JsSequenceExpression, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsSequenceExpression, f: &mut JsFormatter) -> FormatResult<()> {
         let content = format_with(|f| {
             let mut current = node.clone();
             let parent = current.syntax().parent();
@@ -78,7 +78,7 @@ impl FormatNodeFields<JsSequenceExpression> for FormatNodeRule<JsSequenceExpress
                 } else {
                     write![
                         f,
-                        [indent(format_args![
+                        [indent(&format_args![
                             soft_line_break_or_space(),
                             previous_right.format()?,
                             comma_token.format()?,
@@ -94,7 +94,7 @@ impl FormatNodeFields<JsSequenceExpression> for FormatNodeRule<JsSequenceExpress
             } else {
                 write![
                     f,
-                    [indent(format_args![
+                    [indent(&format_args![
                         soft_line_break_or_space(),
                         previous_right.format(),
                     ])]
@@ -104,6 +104,6 @@ impl FormatNodeFields<JsSequenceExpression> for FormatNodeRule<JsSequenceExpress
             Ok(())
         });
 
-        write!(f, [group_elements(content)])
+        write!(f, [group_elements(&content)])
     }
 }

@@ -5,7 +5,7 @@ use rome_js_syntax::JsAssignmentExpression;
 use rome_js_syntax::JsAssignmentExpressionFields;
 
 impl FormatNodeFields<JsAssignmentExpression> for FormatNodeRule<JsAssignmentExpression> {
-    fn format_fields(node: &JsAssignmentExpression, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsAssignmentExpression, f: &mut JsFormatter) -> FormatResult<()> {
         let JsAssignmentExpressionFields {
             left,
             operator_token,
@@ -14,12 +14,12 @@ impl FormatNodeFields<JsAssignmentExpression> for FormatNodeRule<JsAssignmentExp
 
         write!(
             f,
-            [group_elements(format_args![
+            [group_elements(&format_args![
                 left.format(),
                 space_token(),
                 operator_token.format(),
                 line_suffix_boundary(),
-                group_elements(soft_line_indent_or_space(&right.format())),
+                group_elements(&soft_line_indent_or_space(&right.format())),
             ])]
         )
     }

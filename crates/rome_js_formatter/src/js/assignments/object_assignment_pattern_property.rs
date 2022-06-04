@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use rome_formatter::write;
 
+use crate::utils::FormatMemberName;
 use crate::FormatNodeFields;
 use rome_js_syntax::JsObjectAssignmentPatternProperty;
 use rome_js_syntax::JsObjectAssignmentPatternPropertyFields;
@@ -8,7 +9,7 @@ use rome_js_syntax::JsObjectAssignmentPatternPropertyFields;
 impl FormatNodeFields<JsObjectAssignmentPatternProperty>
     for FormatNodeRule<JsObjectAssignmentPatternProperty>
 {
-    fn format_fields(
+    fn fmt_fields(
         node: &JsObjectAssignmentPatternProperty,
         f: &mut JsFormatter,
     ) -> FormatResult<()> {
@@ -22,7 +23,7 @@ impl FormatNodeFields<JsObjectAssignmentPatternProperty>
         write!(
             f,
             [
-                member.format(),
+                FormatMemberName::from(member?),
                 colon_token.format(),
                 space_token(),
                 pattern.format(),

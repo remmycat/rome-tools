@@ -7,7 +7,7 @@ use rome_js_syntax::JsCaseClauseFields;
 use rome_rowan::AstNodeList;
 
 impl FormatNodeFields<JsCaseClause> for FormatNodeRule<JsCaseClause> {
-    fn format_fields(node: &JsCaseClause, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsCaseClause, f: &mut JsFormatter) -> FormatResult<()> {
         let JsCaseClauseFields {
             case_token,
             test,
@@ -49,7 +49,7 @@ impl FormatNodeFields<JsCaseClause> for FormatNodeRule<JsCaseClause> {
             // no line break needed after because it is added by the indent in the switch statement
             write!(
                 f,
-                [indent(format_args![hard_line_break(), format_consequent])]
+                [indent(&format_args![hard_line_break(), format_consequent])]
             )
         }
     }

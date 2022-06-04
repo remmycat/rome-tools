@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::utils::FormatWithSemicolon;
+use crate::utils::{FormatMemberName, FormatWithSemicolon};
 use crate::FormatNodeFields;
 use rome_formatter::{format_args, write};
 use rome_js_syntax::{TsMethodSignatureClassMember, TsMethodSignatureClassMemberFields};
@@ -7,7 +7,7 @@ use rome_js_syntax::{TsMethodSignatureClassMember, TsMethodSignatureClassMemberF
 impl FormatNodeFields<TsMethodSignatureClassMember>
     for FormatNodeRule<TsMethodSignatureClassMember>
 {
-    fn format_fields(node: &TsMethodSignatureClassMember, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &TsMethodSignatureClassMember, f: &mut JsFormatter) -> FormatResult<()> {
         let TsMethodSignatureClassMemberFields {
             modifiers,
             async_token,
@@ -28,7 +28,7 @@ impl FormatNodeFields<TsMethodSignatureClassMember>
                         .format()
                         .with_or_empty(|token, f| write![f, [token, space_token()]]),
                     space_token(),
-                    name.format(),
+                    FormatMemberName::from(name?),
                     question_mark_token.format(),
                     type_parameters.format(),
                     parameters.format(),

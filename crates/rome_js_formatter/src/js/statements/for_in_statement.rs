@@ -6,7 +6,7 @@ use rome_js_syntax::JsForInStatement;
 use rome_js_syntax::JsForInStatementFields;
 
 impl FormatNodeFields<JsForInStatement> for FormatNodeRule<JsForInStatement> {
-    fn format_fields(node: &JsForInStatement, f: &mut JsFormatter) -> FormatResult<()> {
+    fn fmt_fields(node: &JsForInStatement, f: &mut JsFormatter) -> FormatResult<()> {
         let JsForInStatementFields {
             for_token,
             l_paren_token,
@@ -24,11 +24,11 @@ impl FormatNodeFields<JsForInStatement> for FormatNodeRule<JsForInStatement> {
 
         write!(
             f,
-            [group_elements(format_args!(
+            [group_elements(&format_args!(
                 for_token,
                 space_token(),
                 l_paren_token.format(),
-                group_elements(initializer),
+                group_elements(&initializer),
                 space_token(),
                 in_token,
                 space_token(),
