@@ -6,10 +6,7 @@ use crate::prelude::*;
 use crate::utils::member_chain::flatten_item::FlattenItem;
 use crate::utils::member_chain::groups::{Groups, HeadGroup};
 use rome_formatter::{format_args, write, Buffer, PreambleBuffer};
-use rome_js_syntax::{
-    JsCallExpression, JsComputedMemberExpression, JsExpressionStatement, JsStaticMemberExpression,
-};
-use rome_js_syntax::{JsSyntaxKind, JsSyntaxNode};
+use rome_js_syntax::{JsAnyExpression, JsExpressionStatement};
 use rome_rowan::AstNode;
 
 /// Utility function that applies some heuristic to format chain member expressions and call expressions
@@ -118,13 +115,16 @@ use rome_rowan::AstNode;
 /// ```
 ///
 /// [Prettier applies]: https://github.com/prettier/prettier/blob/main/src/language-js/print/member-chain.js
-pub fn format_call_expression(syntax_node: &JsSyntaxNode, f: &mut JsFormatter) -> FormatResult<()> {
+pub fn format_call_expression(
+    expression: JsAnyExpression,
+    f: &mut JsFormatter,
+) -> FormatResult<()> {
     let mut flattened_items = vec![];
-    let parent_is_expression_statement = syntax_node.parent().map_or(false, |parent| {
+    let parent_is_expression_statement = expression.syntax().parent().map_or(false, |parent| {
         JsExpressionStatement::can_cast(parent.kind())
     });
 
-    flatten_call_expression(&mut flattened_items, syntax_node, f)?;
+    flatten_call_expression(&mut flattened_items, expression, f)?;
 
     // Count the number of CallExpression in the chain,
     // will be used later to decide on how to format it
@@ -263,7 +263,7 @@ fn compute_groups(
             FlattenItem::ComputedMember(_) => {
                 groups.start_or_continue_group(item);
             }
-            FlattenItem::Node(_) => groups.continue_group(item),
+            FlattenItem::Expression(_) => groups.continue_group(item),
         }
 
         // Close the group immediately if the node had any trailing comments to
@@ -311,35 +311,32 @@ fn write_groups(
 /// inside an vector of [FlattenItem]. The first element of the vector is the last one.
 fn flatten_call_expression(
     queue: &mut Vec<FlattenItem>,
-    node: &JsSyntaxNode,
+    node: JsAnyExpression,
     f: &mut JsFormatter,
 ) -> FormatResult<()> {
-    match node.kind() {
-        JsSyntaxKind::JS_CALL_EXPRESSION => {
-            let call_expression = JsCallExpression::cast(node.clone()).unwrap();
+    match node {
+        JsAnyExpression::JsCallExpression(call_expression) => {
             let callee = call_expression.callee()?;
-            flatten_call_expression(queue, callee.syntax(), f)?;
+            flatten_call_expression(queue, callee, f)?;
 
             queue.push(FlattenItem::CallExpression(call_expression));
         }
-        JsSyntaxKind::JS_STATIC_MEMBER_EXPRESSION => {
-            let static_member = JsStaticMemberExpression::cast(node.clone()).unwrap();
+        JsAnyExpression::JsStaticMemberExpression(static_member) => {
             let object = static_member.object()?;
-            flatten_call_expression(queue, object.syntax(), f)?;
+            flatten_call_expression(queue, object, f)?;
 
             queue.push(FlattenItem::StaticMember(static_member));
         }
 
-        JsSyntaxKind::JS_COMPUTED_MEMBER_EXPRESSION => {
-            let computed_expression = JsComputedMemberExpression::cast(node.clone()).unwrap();
+        JsAnyExpression::JsComputedMemberExpression(computed_expression) => {
             let object = computed_expression.object()?;
-            flatten_call_expression(queue, object.syntax(), f)?;
+            flatten_call_expression(queue, object, f)?;
 
             queue.push(FlattenItem::ComputedMember(computed_expression));
         }
 
         _ => {
-            queue.push(FlattenItem::Node(node.clone()));
+            queue.push(FlattenItem::Expression(node));
         }
     }
 

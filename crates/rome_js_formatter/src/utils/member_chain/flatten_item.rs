@@ -1,9 +1,8 @@
 use crate::prelude::*;
 use rome_formatter::write;
 use rome_js_syntax::{
-    JsAnyExpression, JsCallExpression, JsComputedMemberExpression, JsIdentifierExpression,
-    JsImportCallExpression, JsNewExpression, JsStaticMemberExpression, JsSyntaxNode,
-    JsThisExpression,
+    JsAnyExpression, JsCallExpression, JsComputedMemberExpression, JsStaticMemberExpression,
+    JsSyntaxNode,
 };
 use rome_rowan::{AstNode, SyntaxResult};
 use std::fmt::Debug;
@@ -19,20 +18,20 @@ pub(crate) enum FlattenItem {
     ComputedMember(JsComputedMemberExpression),
     /// Any other node that are not  [rome_js_syntax::JsCallExpression] or [rome_js_syntax::JsStaticMemberExpression]
     /// Are tracked using this variant
-    Node(JsSyntaxNode),
+    Expression(JsAnyExpression),
 }
 
 impl FlattenItem {
     /// checks if the current node is a [rome_js_syntax::JsCallExpression],  [rome_js_syntax::JsImportExpression] or a [rome_js_syntax::JsNewExpression]
     pub fn is_loose_call_expression(&self) -> bool {
-        match self {
-            FlattenItem::CallExpression(_) => true,
-            FlattenItem::Node(node) => {
-                JsImportCallExpression::can_cast(node.kind())
-                    | JsNewExpression::can_cast(node.kind())
-            }
-            _ => false,
-        }
+        matches!(
+            self,
+            FlattenItem::CallExpression(_)
+                | FlattenItem::Expression(
+                    JsAnyExpression::JsImportCallExpression(_)
+                        | JsAnyExpression::JsNewExpression(_)
+                )
+        )
     }
 
     pub(crate) fn as_syntax(&self) -> &JsSyntaxNode {
@@ -40,17 +39,12 @@ impl FlattenItem {
             FlattenItem::StaticMember(node) => node.syntax(),
             FlattenItem::CallExpression(node) => node.syntax(),
             FlattenItem::ComputedMember(node) => node.syntax(),
-            FlattenItem::Node(node) => node,
+            FlattenItem::Expression(node) => node.syntax(),
         }
     }
 
     pub(crate) fn has_trailing_comments(&self) -> bool {
-        match self {
-            FlattenItem::StaticMember(node) => node.syntax().has_trailing_comments(),
-            FlattenItem::CallExpression(node) => node.syntax().has_trailing_comments(),
-            FlattenItem::ComputedMember(node) => node.syntax().has_trailing_comments(),
-            FlattenItem::Node(node) => node.has_trailing_comments(),
-        }
+        self.as_syntax().has_trailing_comments()
     }
 
     pub fn is_computed_expression(&self) -> bool {
@@ -58,17 +52,17 @@ impl FlattenItem {
     }
 
     pub(crate) fn is_this_expression(&self) -> bool {
-        match self {
-            FlattenItem::Node(node) => JsThisExpression::can_cast(node.kind()),
-            _ => false,
-        }
+        matches!(
+            self,
+            FlattenItem::Expression(JsAnyExpression::JsThisExpression(_))
+        )
     }
 
     pub(crate) fn is_identifier_expression(&self) -> bool {
-        match self {
-            FlattenItem::Node(node) => JsIdentifierExpression::can_cast(node.kind()),
-            _ => false,
-        }
+        matches!(
+            self,
+            FlattenItem::Expression(JsAnyExpression::JsIdentifierExpression(_))
+        )
     }
 
     /// There are cases like Object.keys(), Observable.of(), _.values() where
@@ -109,8 +103,8 @@ impl FlattenItem {
             } else {
                 Ok(check_str(static_member.member()?.text().as_str()))
             }
-        } else if let FlattenItem::Node(node, ..) = self {
-            if let Some(identifier_expression) = JsIdentifierExpression::cast(node.clone()) {
+        } else if let FlattenItem::Expression(node, ..) = self {
+            if let JsAnyExpression::JsIdentifierExpression(identifier_expression) = node {
                 let value_token = identifier_expression.name()?.value_token()?;
                 let text = value_token.text_trimmed();
                 Ok(check_str(text))
@@ -172,7 +166,7 @@ impl Format<JsFormatContext> for FlattenItem {
                     ]
                 )
             }
-            FlattenItem::Node(node) => {
+            FlattenItem::Expression(node) => {
                 write!(f, [node.format()])
             }
         }
